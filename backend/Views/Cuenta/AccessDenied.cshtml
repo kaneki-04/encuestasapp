@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Acceso Denegado";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header text-center">
+            <h2><i class="fas fa-exclamation-triangle text-warning me-2"></i>Acceso Denegado</h2>
+            <p class="text-secondary">No tienes permisos para acceder a esta página</p>
+        </div>
+
+        <div class="text-center mt-4">
+            <p>Lo sentimos, pero no tienes los permisos necesarios para acceder a este recurso.</p>
+            
+            <div class="mt-4">
+                <a asp-action="Login" class="btn btn-primary me-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-home me-2"></i>Ir al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

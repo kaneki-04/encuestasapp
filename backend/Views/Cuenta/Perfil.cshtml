@@ -1,0 +1,70 @@
+@model GestorEncuestas_MVC.Models.PerfilViewModel
+
+@{
+    ViewData["Title"] = "Perfil de Usuario";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card glass-effect">
+                <div class="card-header bg-dark">
+                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Perfil de Usuario</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle mb-3">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
+                        <h5>@Model.Username</h5>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-4">Nombre de usuario:</dt>
+                        <dd class="col-sm-8">@Model.Username</dd>
+
+                        <dt class="col-sm-4">Rol:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-primary">Usuario</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Miembro desde:</dt>
+                        <dd class="col-sm-8">@DateTime.Now.ToString("dd/MM/yyyy")</dd>
+                    </dl>
+
+                    <div class="text-center mt-4">
+                        <a asp-controller="Encuestas" asp-action="Index" class="btn btn-primary">
+                            <i class="fas fa-poll me-2"></i>Mis Encuestas
+                        </a>
+                        <form asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger ms-2">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #6f42c1, #8e44ad);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        color: white;
+    }
+    
+    .glass-effect {
+        background: rgba(26, 26, 46, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>

@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestorEncuestas_MVC", "GestorEncuestas_MVC.csproj", "{B533DD17-F4C3-8356-3163-14BCEC01DC6A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B533DD17-F4C3-8356-3163-14BCEC01DC6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B533DD17-F4C3-8356-3163-14BCEC01DC6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B533DD17-F4C3-8356-3163-14BCEC01DC6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B533DD17-F4C3-8356-3163-14BCEC01DC6A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {10FDEA3F-7BD1-49F1-AA51-815B84E6586D}
+	EndGlobalSection
+EndGlobal

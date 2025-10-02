@@ -1,0 +1,134 @@
+@* Views/Respuestas/Responder.cshtml *@
+@model GestorEncuestas_MVC.Models.ResponderEncuestaViewModel
+
+@{
+    ViewData["Title"] = "Responder Encuesta";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">@Model.Titulo</h2>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.Descripcion))
+            {
+                <p class="lead">@Model.Descripcion</p>
+            }
+            <hr />
+
+            <form asp-action="Responder" method="post">
+                <input type="hidden" asp-for="EncuestaId" />
+                
+                @for (int i = 0; i < Model.Preguntas.Count; i++)
+                {
+                    var pregunta = Model.Preguntas[i];
+                    <input type="hidden" asp-for="Preguntas[i].PreguntaId" />
+                    <input type="hidden" asp-for="Preguntas[i].TipoPregunta" />
+                    <input type="hidden" asp-for="Preguntas[i].Obligatorio" />
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                @pregunta.Enunciado
+                                @if (pregunta.Obligatorio)
+                                {
+                                    <span class="text-danger">*</span>
+                                }
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @switch (pregunta.TipoPregunta)
+                            {
+                                case "Texto":
+                                    <textarea asp-for="Preguntas[i].RespuestaTexto" 
+                                              class="form-control" 
+                                              rows="3" 
+                                              placeholder="Escribe tu respuesta aquí..."></textarea>
+                                    <span asp-validation-for="Preguntas[i].RespuestaTexto" class="text-danger"></span>
+                                    break;
+
+                                case "Escala":
+                                    <input asp-for="Preguntas[i].RespuestaTexto" 
+                                           type="number" 
+                                           class="form-control" 
+                                           min="1" 
+                                           max="10" 
+                                           placeholder="Escribe un número del 1 al 10" />
+                                    <span asp-validation-for="Preguntas[i].RespuestaTexto" class="text-danger"></span>
+                                    break;
+
+                                case "SeleccionUnica":
+                                    foreach (var opcion in pregunta.Opciones)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   asp-for="Preguntas[i].RespuestaOpcionId" 
+                                                   value="@opcion.OpcionId" 
+                                                   id="pregunta_@(pregunta.PreguntaId)_opcion_@(opcion.OpcionId)" />
+                                            <label class="form-check-label" for="pregunta_@(pregunta.PreguntaId)_opcion_@(opcion.OpcionId)">
+                                                @opcion.Label
+                                            </label>
+                                        </div>
+                                    }
+                                    <span asp-validation-for="Preguntas[i].RespuestaOpcionId" class="text-danger"></span>
+                                    break;
+
+                                case "OpcionMultiple":
+                                    foreach (var opcion in pregunta.Opciones)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   name="Preguntas[@i].RespuestaOpcionId" 
+                                                   value="@opcion.OpcionId" 
+                                                   id="pregunta_@(pregunta.PreguntaId)_opcion_@(opcion.OpcionId)" />
+                                            <label class="form-check-label" for="pregunta_@(pregunta.PreguntaId)_opcion_@(opcion.OpcionId)">
+                                                @opcion.Label
+                                            </label>
+                                        </div>
+                                    }
+                                    <input type="hidden" asp-for="Preguntas[i].RespuestaTexto" value="Múltiple" />
+                                    break;
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar Respuestas
+                    </button>
+                    <a asp-controller="Encuestas" asp-action="Index" class="btn btn-secondary btn-lg ms-2">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Validación para checkboxes de opción múltiple
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                const name = checkbox.getAttribute('name');
+                const preguntaIndex = name.match(/\[(\d+)\]/)[1];
+                const obligatorio = document.querySelector(`input[name="Preguntas[${preguntaIndex}].Obligatorio"]`).value === 'True';
+                
+                if (obligatorio) {
+                    const checked = document.querySelectorAll(`input[name="${name}"]:checked`).length > 0;
+                    if (!checked) {
+                        e.preventDefault();
+                        alert('Debes seleccionar al menos una opción en las preguntas obligatorias');
+                        return;
+                    }
+                }
+            });
+        });
+    </script>
+}

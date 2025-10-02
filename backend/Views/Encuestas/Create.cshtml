@@ -1,0 +1,53 @@
+@model GestorEncuestas_MVC.Models.Encuesta
+
+@{
+    ViewData["Title"] = "Crear Encuesta";
+}
+
+<h1>Crear Nueva Encuesta</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="CreateForm" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Titulo" class="control-label"></label>
+                <input asp-for="Titulo" class="form-control" />
+                <span asp-validation-for="Titulo" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Descripcion" class="control-label"></label>
+                <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Descripcion" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Estado" class="control-label"></label>
+                <select asp-for="Estado" class="form-control">
+                    <option value="Activa">Activa</option>
+                    <option value="Inactiva">Inactiva</option>
+                    <option value="Pendiente">Pendiente</option>
+                </select>
+                <span asp-validation-for="Estado" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="CierraEn" class="control-label"></label>
+                <input asp-for="CierraEn" type="datetime-local" class="form-control" />
+                <span asp-validation-for="CierraEn" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="submit" value="Crear" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

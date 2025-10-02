@@ -1,0 +1,77 @@
+@model GestorEncuestas_MVC.Models.Encuesta
+
+@{
+    ViewData["Title"] = "Detalles de Encuesta";
+}
+
+<div>
+    <h1>@Model.Titulo</h1>
+    <hr />
+    <div class="row">
+        <div class="col-md-6">
+            <dl class="row">
+                <dt class="col-sm-4">Descripción:</dt>
+                <dd class="col-sm-8">@Model.Descripcion</dd>
+
+                <dt class="col-sm-4">Estado:</dt>
+                <dd class="col-sm-8">
+                    <span class="badge @(Model.Estado == "Activa" ? "bg-success" : "bg-secondary")">
+                        @Model.Estado
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">Creada en:</dt>
+                <dd class="col-sm-8">@Model.CreadoEn</dd>
+
+                <dt class="col-sm-4">Cierra en:</dt>
+                <dd class="col-sm-8">@Model.CierraEn</dd>
+
+                <dt class="col-sm-4">Autor:</dt>
+                <dd class="col-sm-8">@(Model.Autor?.UserName ?? "N/A")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+        <h2>Preguntas</h2>
+        <a asp-action="CreatePregunta" asp-route-id="@Model.Id" class="btn btn-success">Agregar Pregunta</a>
+    </div>
+
+    @if (Model.Preguntas != null && Model.Preguntas.Any())
+    {
+        <div class="list-group">
+            @foreach (var pregunta in Model.Preguntas)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">@pregunta.Enunciado</h5>
+                        <small>@pregunta.TipoPregunta @(pregunta.Obligatorio ? "(Obligatoria)" : "")</small>
+                    </div>
+                    @if (pregunta.Opciones != null && pregunta.Opciones.Any())
+                    {
+                        <div class="mt-2">
+                            <h6>Opciones:</h6>
+                            <ul class="mb-1">
+                                @foreach (var opcion in pregunta.Opciones)
+                                {
+                                    <li>@opcion.Label (@opcion.Value)</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Esta encuesta no tiene preguntas aún.
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar Encuesta</a>
+        <a asp-action="Index" class="btn btn-secondary">Volver al Listado</a>
+    </div>
+</div>

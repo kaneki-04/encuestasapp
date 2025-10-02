@@ -1,0 +1,59 @@
+@* Views/Respuestas/MisRespuestas.cshtml *@
+@model IEnumerable<GestorEncuestas_MVC.Models.Respuesta>
+
+@{
+    ViewData["Title"] = "Mis Respuestas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Respuestas</h1>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>No has respondido ninguna encuesta aún.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var respuesta in Model.GroupBy(r => r.EncuestaId))
+            {
+                var primeraRespuesta = respuesta.First();
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title">@primeraRespuesta.Encuesta.Titulo</h5>
+                            <small class="text-muted">Respondida el: @primeraRespuesta.FechaRespuesta.ToString("dd/MM/yyyy HH:mm")</small>
+                        </div>
+                        <div class="card-body">
+                            <h6>Respuestas:</h6>
+                            <ul class="list-group list-group-flush">
+                                @foreach (var resp in respuesta)
+                                {
+                                    <li class="list-group-item">
+                                        <strong>@resp.Pregunta.Enunciado:</strong>
+                                        @if (!string.IsNullOrEmpty(resp.Texto))
+                                        {
+                                            <span>@resp.Texto</span>
+                                        }
+                                        else if (resp.Numerica.HasValue)
+                                        {
+                                            <span>@resp.Numerica.Value</span>
+                                        }
+                                        else if (resp.SeleccionOpcion != null)
+                                        {
+                                            <span>@resp.SeleccionOpcion.Label</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

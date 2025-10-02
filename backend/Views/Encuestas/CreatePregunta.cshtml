@@ -1,0 +1,52 @@
+@model GestorEncuestas_MVC.Models.Pregunta
+
+@{
+    ViewData["Title"] = "Agregar Pregunta";
+    var encuestaId = ViewData["EncuestaId"];
+    var encuestaTitulo = ViewData["EncuestaTitulo"];
+}
+
+<h1>Agregar Pregunta</h1>
+<h4>Para encuesta: @encuestaTitulo</h4>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="CreatePregunta" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <input type="hidden" name="encuestaId" value="@encuestaId" />
+            
+            <div class="form-group mb-3">
+                <label asp-for="Enunciado" class="control-label"></label>
+                <input asp-for="Enunciado" class="form-control" />
+                <span asp-validation-for="Enunciado" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="TipoPregunta" class="control-label"></label>
+                <select asp-for="TipoPregunta" class="form-control">
+                    <option value="Texto">Texto Abierto</option>
+                    <option value="OpcionMultiple">Opción Múltiple</option>
+                    <option value="SeleccionUnica">Selección Única</option>
+                    <option value="Escala">Escala Numérica</option>
+                </select>
+                <span asp-validation-for="TipoPregunta" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3 form-check">
+                <input class="form-check-input" asp-for="Obligatorio" />
+                <label class="form-check-label" asp-for="Obligatorio"></label>
+            </div>
+            
+            <div class="form-group">
+                <input type="submit" value="Crear Pregunta" class="btn btn-primary" />
+                <a asp-action="Details" asp-route-id="@encuestaId" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
