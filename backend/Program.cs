@@ -19,6 +19,18 @@ builder.Services.AddControllers()
         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
     });
 
+// ✅ Agregar CORS para React
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // URL del frontend React
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 // Configurar Entity Framework con MySQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
@@ -36,15 +48,15 @@ builder.Services.AddIdentity<Usuario, Rol>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
-    
+
     // Configuración de usuario
     options.User.RequireUniqueEmail = false;
-    
+
     // Configuración de bloqueo
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
-    
+
     // Configuración de inicio de sesión
     options.SignIn.RequireConfirmedAccount = false;
     options.SignIn.RequireConfirmedEmail = false;
@@ -67,10 +79,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Configurar políticas de autorización
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("RequireAdmin", policy => 
+    options.AddPolicy("RequireAdmin", policy =>
         policy.RequireRole("Admin"));
-    
-    options.AddPolicy("RequireUser", policy => 
+
+    options.AddPolicy("RequireUser", policy =>
         policy.RequireRole("User", "Admin"));
 });
 
@@ -98,6 +110,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// ✅ Agregar CORS para React antes de autenticación/autorización
+app.UseCors("ReactApp");
+
 // IMPORTANTE: UseAuthentication debe ir antes de UseAuthorization
 app.UseAuthentication();
 app.UseAuthorization();
@@ -114,26 +129,28 @@ if (app.Environment.IsDevelopment())
     {
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Rol>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
-        
+
         // Crear roles si no existen
-        var roles = new[] { 
-            new { Name = "Admin", Id = 1 }, 
-            new { Name = "User", Id = 2 } 
+        var roles = new[]
+        {
+            new { Name = "Admin", Id = 1 },
+            new { Name = "User", Id = 2 }
         };
 
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role.Name))
             {
-                await roleManager.CreateAsync(new Rol { 
+                await roleManager.CreateAsync(new Rol
+                {
                     Id = role.Id,
-                    DisplayRolNombre = role.Name, 
+                    DisplayRolNombre = role.Name,
                     Name = role.Name,
                     NormalizedName = role.Name.ToUpper()
                 });
             }
         }
-        
+
         // Crear usuario admin si no existe
         var adminUser = await userManager.FindByNameAsync("admin");
         if (adminUser == null)
@@ -147,7 +164,7 @@ if (app.Environment.IsDevelopment())
                 EmailConfirmed = true,
                 RolId = 1 // Asignar el ID del rol Admin
             };
-            
+
             var result = await userManager.CreateAsync(user, "Admin123!");
             if (result.Succeeded)
             {

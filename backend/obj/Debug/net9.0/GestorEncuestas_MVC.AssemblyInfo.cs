@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GestorEncuestas_MVC")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af9cbc1ca93d2f268d35938b560f3e6f8da1c88c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a22882e4db98f6b4437771183641ad72983515d1")]
 [assembly: System.Reflection.AssemblyProductAttribute("GestorEncuestas_MVC")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GestorEncuestas_MVC")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

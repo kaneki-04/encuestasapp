@@ -9167,11 +9167,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\Encuesta MVC FINAL WEB2\\Proyecto_Web_MVC\\GestorEncuestas_MVC.csproj",
+      "projectUniqueName": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
       "projectName": "GestorEncuestas_MVC",
-      "projectPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\Encuesta MVC FINAL WEB2\\Proyecto_Web_MVC\\GestorEncuestas_MVC.csproj",
+      "projectPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
       "packagesPath": "C:\\Users\\kvin1\\.nuget\\packages\\",
-      "outputPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\Encuesta MVC FINAL WEB2\\Proyecto_Web_MVC\\obj\\",
+      "outputPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

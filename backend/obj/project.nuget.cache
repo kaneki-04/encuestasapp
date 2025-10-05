@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "hCvsuNhwnXs=",
+  "dgSpecHash": "MFcfxRQyN+I=",
   "success": true,
-  "projectFilePath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\Encuesta MVC FINAL WEB2\\Proyecto_Web_MVC\\GestorEncuestas_MVC.csproj",
+  "projectFilePath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\kvin1\\.nuget\\packages\\closedxml\\0.102.2\\closedxml.0.102.2.nupkg.sha512",
     "C:\\Users\\kvin1\\.nuget\\packages\\documentformat.openxml\\2.16.0\\documentformat.openxml.2.16.0.nupkg.sha512",
