@@ -2,16 +2,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using GestorEncuestas_MVC.Data;
 using GestorEncuestas_MVC.Models;
-using GestorEncuestas_MVC.Services; // ✅ AÑADIR este using
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson; // ✅ AÑADIR este using
-using Newtonsoft.Json; // ✅ AÑADIR este using
+using GestorEncuestas_MVC.Services; 
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson; 
+using Newtonsoft.Json; 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// ✅ AÑADIR Configuración para la API de exportación Excel
 builder.Services.AddScoped<IExcelExportService, ExcelExportService>();
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options =>
@@ -19,7 +18,6 @@ builder.Services.AddControllers()
         options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
     });
 
-// ✅ Agregar CORS para React
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ReactApp", policy =>
@@ -110,7 +108,6 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// ✅ Agregar CORS para React antes de autenticación/autorización
 app.UseCors("ReactApp");
 
 // IMPORTANTE: UseAuthentication debe ir antes de UseAuthorization
@@ -119,7 +116,6 @@ app.UseAuthorization();
 
 app.UseSession();
 
-// ✅ AÑADIR Mapeo de controladores API (IMPORTANTE para que funcionen los endpoints API)
 app.MapControllers();
 
 // Crear roles iniciales y usuario admin (solo en desarrollo)

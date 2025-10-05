@@ -1,25 +1,31 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\diego\\Downloads\\kevin\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {}
+    "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {}
   },
   "projects": {
-    "C:\\Users\\diego\\Downloads\\kevin\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {
+    "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\diego\\Downloads\\kevin\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
+        "projectUniqueName": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
         "projectName": "GestorEncuestas_MVC",
-        "projectPath": "C:\\Users\\diego\\Downloads\\kevin\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
-        "packagesPath": "C:\\Users\\diego\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\diego\\Downloads\\kevin\\encuestasapp\\backend\\obj\\",
+        "projectPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
+        "packagesPath": "C:\\Users\\kvin1\\.nuget\\packages\\",
+        "outputPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\diego\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\kvin1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
