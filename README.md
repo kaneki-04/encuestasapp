@@ -53,3 +53,39 @@ El objetivo principal del proyecto es ofrecer una plataforma donde los usuarios 
 
 ## 🗃️ Estructura del Proyecto
 
+
+---
+
+## 🔐 Funcionalidades del Sistema
+
+| Módulo | Descripción |
+|--------|--------------|
+| 👤 Autenticación | Registro, inicio y cierre de sesión de usuarios. |
+| 🔑 Roles | Permite diferenciar permisos (administrador/usuario). |
+| 📊 Encuestas | Creación, edición y eliminación de encuestas. |
+| 🧾 Preguntas y Respuestas | Administración de las preguntas y sus respuestas. |
+| 📈 Reportes | Visualización de resultados y estadísticas básicas. |
+
+---
+
+## 🧠 Requisitos del Parcial
+
+El proyecto cumple con los siguientes requerimientos establecidos por la asignatura:
+
+- [x] Autenticación  
+- [x] Roles  
+- [x] Sesiones  
+- [x] CRUD  
+- [x] Base de datos con mínimo 5 tablas relacionadas  
+
+---
+
+## 🚀 Ejecución del Proyecto
+
+### 🔹 Clonar el repositorio
+
+```bash
+https://github.com/kaneki-04/encuestasapp
+cd encuestasapp
+
+
