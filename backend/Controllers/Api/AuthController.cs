@@ -1,9 +1,13 @@
+// Controllers/Api/AuthController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
-using GestorEncuestas_MVC.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+
+using GestorEncuestas_MVC.Models;
 
 namespace GestorEncuestas_MVC.Controllers.Api
 {
@@ -33,44 +37,47 @@ namespace GestorEncuestas_MVC.Controllers.Api
         public async Task<IActionResult> Login([FromBody] LoginApiRequest request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var result = await _signInManager.PasswordSignInAsync(
-                request.Username, 
-                request.Password, 
-                request.RememberMe, 
+                request.Username,
+                request.Password,
+                request.RememberMe,
                 lockoutOnFailure: false);
 
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                _logger.LogInformation("Usuario {Username} inició sesión via API.", request.Username);
-                
-                var user = await _userManager.FindByNameAsync(request.Username);
-                var roles = await _userManager.GetRolesAsync(user);
-                
-                return Ok(new LoginResponse 
-                { 
-                    Success = true, 
-                    Message = "Login exitoso",
-                    User = new UserInfo 
-                    { 
-                        Id = user.Id,
-                        UserName = user.UserName,
-                        Email = user.Email,
-                        Roles = roles
-                    }
+                return Unauthorized(new LoginResponse
+                {
+                    Success = false,
+                    Message = "Usuario o contraseña incorrectos"
                 });
             }
-            else
+
+            _logger.LogInformation("Usuario {Username} inició sesión via API.", request.Username);
+
+            // user podría ser null a ojos del compilador → control explícito
+            var user = await _userManager.FindByNameAsync(request.Username);
+            if (user is null)
             {
-                return Unauthorized(new LoginResponse 
-                { 
-                    Success = false, 
-                    Message = "Usuario o contraseña incorrectos" 
-                });
+                _logger.LogWarning("PasswordSignInAsync ok, pero no se encontró el usuario {Username}.", request.Username);
+                return StatusCode(500, new { Message = "No se pudo recuperar el usuario." });
             }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new LoginResponse
+            {
+                Success = true,
+                Message = "Login exitoso",
+                User = new UserInfo
+                {
+                    Id = user.Id,
+                    UserName = user.UserName ?? (user.Email ?? string.Empty), // evita CS8601
+                    Email = user.Email,                                       // Email es string?
+                    Roles = roles ?? new List<string>()
+                }
+            });
         }
 
         [HttpPost("register")]
@@ -78,57 +85,55 @@ namespace GestorEncuestas_MVC.Controllers.Api
         public async Task<IActionResult> Register([FromBody] RegisterApiRequest request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
+
+            if (request.Password != request.ConfirmPassword)
+            {
+                return BadRequest(new { Message = "Las contraseñas no coinciden." });
             }
 
-            // Buscar el rol User
+            // Asegurar existencia del rol "User"
             var userRole = await _roleManager.FindByNameAsync("User");
             if (userRole == null)
             {
                 userRole = new Rol { Name = "User", DisplayRolNombre = "User" };
                 var roleResult = await _roleManager.CreateAsync(userRole);
-                
                 if (!roleResult.Succeeded)
-                {
                     return BadRequest(new { Message = "Error al crear el rol de usuario." });
-                }
             }
 
-            var user = new Usuario 
-            { 
-                UserName = request.Username,
+            var user = new Usuario
+            {
+                UserName = request.Username ?? string.Empty, // evita CS8601
                 RolId = userRole.Id
             };
-            
+
             var result = await _userManager.CreateAsync(user, request.Password);
+            if (!result.Succeeded)
+                return BadRequest(new { Message = "Error en el registro", Errors = result.Errors });
 
-            if (result.Succeeded)
+            // Asignar rol
+            await _userManager.AddToRoleAsync(user, "User");
+
+            _logger.LogInformation("Usuario {Username} se registró exitosamente via API.", request.Username);
+
+            // Iniciar sesión automáticamente
+            await _signInManager.SignInAsync(user, isPersistent: false);
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new LoginResponse
             {
-                await _userManager.AddToRoleAsync(user, "User");
-                
-                _logger.LogInformation("Usuario {Username} se registró exitosamente via API.", request.Username);
-
-                // Iniciar sesión automáticamente
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                
-                var roles = await _userManager.GetRolesAsync(user);
-                
-                return Ok(new LoginResponse 
-                { 
-                    Success = true, 
-                    Message = "Registro exitoso",
-                    User = new UserInfo 
-                    { 
-                        Id = user.Id,
-                        UserName = user.UserName,
-                        Email = user.Email,
-                        Roles = roles
-                    }
-                });
-            }
-
-            return BadRequest(new { Message = "Error en el registro", Errors = result.Errors });
+                Success = true,
+                Message = "Registro exitoso",
+                User = new UserInfo
+                {
+                    Id = user.Id,
+                    UserName = user.UserName ?? string.Empty, // evita CS8601
+                    Email = user.Email,
+                    Roles = roles ?? new List<string>()
+                }
+            });
         }
 
         [HttpPost("logout")]
@@ -146,23 +151,21 @@ namespace GestorEncuestas_MVC.Controllers.Api
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
-            {
                 return Unauthorized();
-            }
 
             var roles = await _userManager.GetRolesAsync(user);
-            
-            return Ok(new UserInfo 
-            { 
+
+            return Ok(new UserInfo
+            {
                 Id = user.Id,
-                UserName = user.UserName,
+                UserName = user.UserName ?? (user.Email ?? string.Empty), // evita CS8601
                 Email = user.Email,
-                Roles = roles
+                Roles = roles ?? new List<string>()
             });
         }
     }
 
-    // DTOs para la API
+    // ===== DTOs =====
     public class LoginApiRequest
     {
         [Required]
@@ -196,8 +199,8 @@ namespace GestorEncuestas_MVC.Controllers.Api
     public class UserInfo
     {
         public int Id { get; set; }
-        public string UserName { get; set; } = string.Empty;
-        public string? Email { get; set; }
+        public string UserName { get; set; } = string.Empty; // no-null en la respuesta
+        public string? Email { get; set; }                    // puede ser null
         public IList<string> Roles { get; set; } = new List<string>();
     }
 }

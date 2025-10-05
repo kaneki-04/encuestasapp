@@ -1,3 +1,4 @@
+// Controllers/EncuestasController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +7,7 @@ using GestorEncuestas_MVC.Data;
 using GestorEncuestas_MVC.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using System; // por DateTime
 
 namespace GestorEncuestas_MVC.Controllers
 {
@@ -29,39 +31,32 @@ namespace GestorEncuestas_MVC.Controllers
             {
                 return Challenge();
             }
-            
+
             var encuestas = await _context.Encuestas
+                .AsNoTracking()
                 .Include(e => e.Autor)
-                .Where(e => e.AutorId == usuarioActual.Id) // Solo las encuestas del usuario actual
+                .Where(e => e.AutorId == usuarioActual.Id)
                 .ToListAsync();
-                
+
             return View(encuestas);
         }
 
         // GET: Encuestas/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
+            if (usuarioActual == null) return Challenge();
+
             var encuesta = await _context.Encuestas
+                .AsNoTracking()
                 .Include(e => e.Autor)
                 .Include(e => e.Preguntas)
                     .ThenInclude(p => p.Opciones)
-                .FirstOrDefaultAsync(m => m.Id == id && m.AutorId == usuarioActual.Id); // Solo si es del usuario
-            
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
+                .FirstOrDefaultAsync(m => m.Id == id && m.AutorId == usuarioActual.Id);
+
+            if (encuesta == null) return NotFound();
 
             return View(encuesta);
         }
@@ -77,48 +72,34 @@ namespace GestorEncuestas_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateForm([Bind("Titulo,Descripcion,Estado,CierraEn")] Encuesta encuesta)
         {
-            if (ModelState.IsValid)
-            {
-                var usuarioActual = await _userManager.GetUserAsync(User);
-                if (usuarioActual == null)
-                {
-                    return Challenge();
-                }
-                
-                encuesta.CreadoEn = DateTime.Now;
-                encuesta.AutorId = usuarioActual.Id; // Asignar el usuario autenticado
-                
-                _context.Add(encuesta);
-                await _context.SaveChangesAsync();
-                
-                TempData["SuccessMessage"] = "Encuesta creada exitosamente.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(encuesta);
+            if (!ModelState.IsValid) return View(encuesta);
+
+            var usuarioActual = await _userManager.GetUserAsync(User);
+            if (usuarioActual == null) return Challenge();
+
+            encuesta.CreadoEn = DateTime.Now;
+            encuesta.AutorId = usuarioActual.Id;
+
+            _context.Add(encuesta);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Encuesta creada exitosamente.";
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Encuestas/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
+            if (usuarioActual == null) return Challenge();
+
             var encuesta = await _context.Encuestas
-                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id); // Solo si es del usuario
-                
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
-            
+                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id);
+
+            if (encuesta == null) return NotFound();
+
             return View(encuesta);
         }
 
@@ -127,32 +108,23 @@ namespace GestorEncuestas_MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Titulo,Descripcion,Estado,CierraEn,CreadoEn,AutorId")] Encuesta encuesta)
         {
-            if (id != encuesta.Id)
-            {
-                return NotFound();
-            }
+            if (id != encuesta.Id) return NotFound();
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
+            if (usuarioActual == null) return Challenge();
+
             // Verificar que la encuesta pertenece al usuario actual
             var encuestaExistente = await _context.Encuestas
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id);
-                
-            if (encuestaExistente == null)
-            {
-                return NotFound();
-            }
+
+            if (encuestaExistente == null) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Mantener los valores originales que no se editan
+                    // Mantener valores que no se editan
                     encuesta.AutorId = usuarioActual.Id;
                     encuesta.CreadoEn = encuestaExistente.CreadoEn;
 
@@ -163,14 +135,8 @@ namespace GestorEncuestas_MVC.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!EncuestaExists(encuesta.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!EncuestaExists(encuesta.Id)) return NotFound();
+                    throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -187,33 +153,26 @@ namespace GestorEncuestas_MVC.Controllers
                 return View(encuesta);
             }
 
-            return View(encuesta);
+            // <- Se eliminó el return View(encuesta); inalcanzable
         }
 
         // GET: Encuestas/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
-            var encuesta = await _context.Encuestas
-                .Include(e => e.Autor)
-                .FirstOrDefaultAsync(m => m.Id == id && m.AutorId == usuarioActual.Id); // Solo si es del usuario
-                
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
+            if (usuarioActual == null) return Challenge();
 
-           return View("Create", encuesta);
+            var encuesta = await _context.Encuestas
+                .AsNoTracking()
+                .Include(e => e.Autor)
+                .FirstOrDefaultAsync(m => m.Id == id && m.AutorId == usuarioActual.Id);
+
+            if (encuesta == null) return NotFound();
+
+            // Ojo: estabas devolviendo View("Create", encuesta). Lo normal es:
+            return View(encuesta);
         }
 
         // POST: Encuestas/Delete/5
@@ -222,22 +181,16 @@ namespace GestorEncuestas_MVC.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
+            if (usuarioActual == null) return Challenge();
+
             var encuesta = await _context.Encuestas
-                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id); // Solo si es del usuario
-                
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
+                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id);
+
+            if (encuesta == null) return NotFound();
 
             _context.Encuestas.Remove(encuesta);
             await _context.SaveChangesAsync();
-            
+
             TempData["SuccessMessage"] = "Encuesta eliminada exitosamente.";
             return RedirectToAction(nameof(Index));
         }
@@ -245,24 +198,16 @@ namespace GestorEncuestas_MVC.Controllers
         // GET: Encuestas/CreatePregunta/5
         public async Task<IActionResult> CreatePregunta(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
+            if (usuarioActual == null) return Challenge();
+
             var encuesta = await _context.Encuestas
-                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id); // Solo si es del usuario
-                
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == id && e.AutorId == usuarioActual.Id);
+
+            if (encuesta == null) return NotFound();
 
             ViewData["EncuestaId"] = id.Value;
             ViewData["EncuestaTitulo"] = encuesta.Titulo;
@@ -275,19 +220,12 @@ namespace GestorEncuestas_MVC.Controllers
         public async Task<IActionResult> CreatePregunta(int encuestaId, [Bind("Enunciado,TipoPregunta,Obligatorio")] Pregunta pregunta)
         {
             var usuarioActual = await _userManager.GetUserAsync(User);
-            if (usuarioActual == null)
-            {
-                return Challenge();
-            }
-            
-            // Verificar que la encuesta pertenece al usuario actual
+            if (usuarioActual == null) return Challenge();
+
             var encuesta = await _context.Encuestas
                 .FirstOrDefaultAsync(e => e.Id == encuestaId && e.AutorId == usuarioActual.Id);
-                
-            if (encuesta == null)
-            {
-                return NotFound();
-            }
+
+            if (encuesta == null) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -308,7 +246,7 @@ namespace GestorEncuestas_MVC.Controllers
                     }
                 }
             }
-            
+
             ViewData["EncuestaId"] = encuestaId;
             ViewData["EncuestaTitulo"] = encuesta.Titulo ?? string.Empty;
             return View(pregunta);

@@ -41,7 +41,7 @@ namespace GestorEncuestas_MVC.Models
     // Atributo de validación personalizado
     public class RequiredIfObligatorioAttribute : ValidationAttribute
     {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
             var pregunta = (PreguntaRespuestaViewModel)validationContext.ObjectInstance;
             

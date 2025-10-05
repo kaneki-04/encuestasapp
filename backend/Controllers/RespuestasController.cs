@@ -1,12 +1,14 @@
 // Controllers/RespuestasController.cs
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using GestorEncuestas_MVC.Data;
-using GestorEncuestas_MVC.Models;
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using GestorEncuestas_MVC.Data;
+using GestorEncuestas_MVC.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GestorEncuestas_MVC.Controllers
 {
@@ -27,18 +29,20 @@ namespace GestorEncuestas_MVC.Controllers
         public async Task<IActionResult> Responder(int id)
         {
             var encuesta = await _context.Encuestas
+                .AsNoTracking()
                 .Include(e => e.Preguntas)
                     .ThenInclude(p => p.Opciones)
                 .FirstOrDefaultAsync(e => e.Id == id && e.Estado == "Activa");
 
             if (encuesta == null)
-            {
                 return NotFound();
-            }
 
-            // Verificar si el usuario ya respondió esta encuesta
             var usuarioActual = await _userManager.GetUserAsync(User);
+            if (usuarioActual is null)
+                return Challenge();
+
             var yaRespondio = await _context.Respuestas
+                .AsNoTracking()
                 .AnyAsync(r => r.EncuestaId == id && r.UsuarioId == usuarioActual.Id);
 
             if (yaRespondio)
@@ -76,15 +80,14 @@ namespace GestorEncuestas_MVC.Controllers
         public async Task<IActionResult> Responder(ResponderEncuestaViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return View(model);
-            }
 
             var usuarioActual = await _userManager.GetUserAsync(User);
-            var fechaActual = DateTime.Now;
+            if (usuarioActual is null)
+                return Challenge();
 
-            // Verificar si ya respondió
             var yaRespondio = await _context.Respuestas
+                .AsNoTracking()
                 .AnyAsync(r => r.EncuestaId == model.EncuestaId && r.UsuarioId == usuarioActual.Id);
 
             if (yaRespondio)
@@ -93,7 +96,8 @@ namespace GestorEncuestas_MVC.Controllers
                 return RedirectToAction("Index", "Encuestas");
             }
 
-            // Guardar respuestas
+            var fechaActual = DateTime.Now;
+
             foreach (var pregunta in model.Preguntas)
             {
                 var respuesta = new Respuesta
@@ -104,25 +108,56 @@ namespace GestorEncuestas_MVC.Controllers
                     FechaRespuesta = fechaActual
                 };
 
-                if (pregunta.TipoPregunta == "Texto")
+                switch (pregunta.TipoPregunta)
                 {
-                    respuesta.Texto = pregunta.RespuestaTexto;
-                }
-                else if (pregunta.TipoPregunta == "Escala")
-                {
-                    respuesta.Numerica = float.Parse(pregunta.RespuestaTexto);
-                }
-                else if (pregunta.TipoPregunta == "SeleccionUnica" || pregunta.TipoPregunta == "OpcionMultiple")
-                {
-                    if (!string.IsNullOrEmpty(pregunta.RespuestaOpcionId))
-                    {
-                        respuesta.SeleccionOpcionId = int.Parse(pregunta.RespuestaOpcionId);
-                        respuesta.Texto = pregunta.RespuestaTexto;
-                    }
+                    case "Texto":
+                        // No asignamos null: usamos string.Empty si viene vacío
+                        respuesta.Texto = SanitizeText(pregunta.RespuestaTexto);
+                        break;
+
+                    case "Escala":
+                        if (TryParseFloat(pregunta.RespuestaTexto, out var numero))
+                        {
+                            respuesta.Numerica = numero;
+                        }
+                        else
+                        {
+                            if (pregunta.Obligatorio)
+                                ModelState.AddModelError(string.Empty, $"La pregunta '{pregunta.Enunciado}' requiere un número válido.");
+                        }
+                        break;
+
+                    case "SeleccionUnica":
+                    case "OpcionMultiple":
+                        if (!string.IsNullOrWhiteSpace(pregunta.RespuestaOpcionId))
+                        {
+                            if (int.TryParse(pregunta.RespuestaOpcionId, out var opcionId))
+                            {
+                                respuesta.SeleccionOpcionId = opcionId;
+                                // Texto adicional (comentario) sin nulls
+                                respuesta.Texto = SanitizeText(pregunta.RespuestaTexto);
+                            }
+                            else
+                            {
+                                ModelState.AddModelError(string.Empty, $"La selección de la pregunta '{pregunta.Enunciado}' no es válida.");
+                            }
+                        }
+                        else if (pregunta.Obligatorio)
+                        {
+                            ModelState.AddModelError(string.Empty, $"Debes seleccionar una opción en '{pregunta.Enunciado}'.");
+                        }
+                        break;
+
+                    default:
+                        ModelState.AddModelError(string.Empty, $"Tipo de pregunta desconocido: {pregunta.TipoPregunta}");
+                        break;
                 }
 
                 _context.Respuestas.Add(respuesta);
             }
+
+            if (!ModelState.IsValid)
+                return View(model);
 
             try
             {
@@ -130,7 +165,7 @@ namespace GestorEncuestas_MVC.Controllers
                 TempData["SuccessMessage"] = "¡Encuesta respondida exitosamente!";
                 return RedirectToAction("Index", "Encuestas");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 TempData["ErrorMessage"] = "Error al guardar las respuestas.";
                 return View(model);
@@ -141,8 +176,11 @@ namespace GestorEncuestas_MVC.Controllers
         public async Task<IActionResult> MisRespuestas()
         {
             var usuarioActual = await _userManager.GetUserAsync(User);
-            
+            if (usuarioActual is null)
+                return Challenge();
+
             var respuestas = await _context.Respuestas
+                .AsNoTracking()
                 .Include(r => r.Encuesta)
                 .Include(r => r.Pregunta)
                 .Where(r => r.UsuarioId == usuarioActual.Id)
@@ -151,5 +189,19 @@ namespace GestorEncuestas_MVC.Controllers
 
             return View(respuestas);
         }
+
+        // ---- Helpers ----
+
+        private static bool TryParseFloat(string? input, out float value)
+        {
+            value = default;
+            if (string.IsNullOrWhiteSpace(input)) return false;
+
+            return float.TryParse(input, NumberStyles.Float, CultureInfo.CurrentCulture, out value)
+                || float.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static string SanitizeText(string? text)
+            => string.IsNullOrWhiteSpace(text) ? string.Empty : text;
     }
 }

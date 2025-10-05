@@ -35,6 +35,7 @@ namespace GestorEncuestas_MVC.Controllers
             try
             {
                 var encuesta = await _context.Encuestas
+                    .AsNoTracking()
                     .Include(e => e.Autor)
                     .Include(e => e.Preguntas)
                         .ThenInclude(p => p.Opciones)
@@ -48,20 +49,17 @@ namespace GestorEncuestas_MVC.Controllers
                     .FirstOrDefaultAsync(e => e.Id == id);
 
                 if (encuesta == null)
-                {
                     return NotFound($"Encuesta con ID {id} no encontrada.");
-                }
 
-                // Mapear a DTO de exportación
                 var encuestaExport = MapToExportDTO(encuesta);
 
-                // Generar Excel
                 var excelData = _excelExportService.ExportEncuestaToExcel(encuestaExport);
 
-                // Devolver como archivo descargable
-                return File(excelData, 
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
-                           $"Encuesta_{encuesta.Titulo}_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                return File(
+                    excelData,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Encuesta_{(encuesta.Titulo ?? "SinTitulo").Replace(' ', '_')}_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                );
             }
             catch (Exception ex)
             {
@@ -76,31 +74,32 @@ namespace GestorEncuestas_MVC.Controllers
             try
             {
                 var encuestas = await _context.Encuestas
+                    .AsNoTracking()
                     .Include(e => e.Autor)
                     .Where(e => encuestaIds.Contains(e.Id))
                     .Select(e => new EncuestaExportDTO
                     {
                         Id = e.Id,
-                        Titulo = e.Titulo,
-                        Descripcion = e.Descripcion,
-                        Estado = e.Estado,
+                        Titulo = e.Titulo ?? string.Empty,                 // ← coalesce
+                        Descripcion = e.Descripcion ?? string.Empty,       // ← coalesce
+                        Estado = e.Estado ?? "Desconocido",               // ← coalesce
                         CierraEn = e.CierraEn,
                         CreadoEn = e.CreadoEn,
-                        Autor = e.Autor.UserName,
-                        TotalRespuestas = e.Respuestas.Count
+                        Autor = (e.Autor != null ? (e.Autor.UserName ?? "Desconocido") : "Desconocido"), // ← coalesce seguro
+                        TotalRespuestas = e.Respuestas.Count              // Count se traduce; colección no debería ser null
                     })
                     .ToListAsync();
 
                 if (!encuestas.Any())
-                {
                     return NotFound("No se encontraron encuestas con los IDs proporcionados.");
-                }
 
                 var excelData = _excelExportService.ExportMultipleEncuestasToExcel(encuestas);
 
-                return File(excelData, 
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
-                           $"Resumen_Encuestas_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                return File(
+                    excelData,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Resumen_Encuestas_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                );
             }
             catch (Exception ex)
             {
@@ -115,15 +114,15 @@ namespace GestorEncuestas_MVC.Controllers
             try
             {
                 if (encuestaData == null)
-                {
                     return BadRequest("Datos de encuesta no válidos.");
-                }
 
                 var excelData = _excelExportService.ExportEncuestaToExcel(encuestaData);
 
-                return File(excelData, 
-                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
-                           $"Encuesta_Desde_JSON_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                return File(
+                    excelData,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"Encuesta_Desde_JSON_{DateTime.Now:yyyyMMddHHmmss}.xlsx"
+                );
             }
             catch (Exception ex)
             {
@@ -136,9 +135,9 @@ namespace GestorEncuestas_MVC.Controllers
             var exportDTO = new EncuestaExportDTO
             {
                 Id = encuesta.Id,
-                Titulo = encuesta.Titulo,
-                Descripcion = encuesta.Descripcion,
-                Estado = encuesta.Estado,
+                Titulo = encuesta.Titulo ?? string.Empty,
+                Descripcion = encuesta.Descripcion ?? string.Empty,
+                Estado = encuesta.Estado ?? "Desconocido",
                 CierraEn = encuesta.CierraEn,
                 CreadoEn = encuesta.CreadoEn,
                 Autor = encuesta.Autor?.UserName ?? "Desconocido",
@@ -151,31 +150,31 @@ namespace GestorEncuestas_MVC.Controllers
                 var preguntaDTO = new PreguntaExportDTO
                 {
                     Id = pregunta.Id,
-                    Enunciado = pregunta.Enunciado,
-                    TipoPregunta = pregunta.TipoPregunta,
+                    Enunciado = pregunta.Enunciado ?? string.Empty,
+                    TipoPregunta = pregunta.TipoPregunta ?? string.Empty,
                     Obligatorio = pregunta.Obligatorio,
                     Opciones = new List<OpcionExportDTO>(),
                     Respuestas = new List<RespuestaExportDTO>()
                 };
 
-                // Mapear opciones
                 foreach (var opcion in pregunta.Opciones)
                 {
-                    var conteoSelecciones = encuesta.Respuestas
-                        .Count(r => r.PreguntaId == pregunta.Id && 
-                                   (r.SeleccionOpcionId == opcion.Id || 
-                                    r.RespuestasOpciones.Any(ro => ro.OpcionId == opcion.Id)));
+                    var conteoSelecciones = encuesta.Respuestas.Count(r =>
+                        r.PreguntaId == pregunta.Id &&
+                        (
+                            r.SeleccionOpcionId == opcion.Id ||
+                            r.RespuestasOpciones.Any(ro => ro.OpcionId == opcion.Id)
+                        ));
 
                     preguntaDTO.Opciones.Add(new OpcionExportDTO
                     {
                         Id = opcion.Id,
-                        Label = opcion.Label,
-                        Value = opcion.Value,
+                        Label = opcion.Label ?? string.Empty,
+                        Value = opcion.Value ?? string.Empty,
                         ConteoSelecciones = conteoSelecciones
                     });
                 }
 
-                // Mapear respuestas
                 foreach (var respuesta in encuesta.Respuestas.Where(r => r.PreguntaId == pregunta.Id))
                 {
                     string valorRespuesta = "";
@@ -189,14 +188,14 @@ namespace GestorEncuestas_MVC.Controllers
                     {
                         var opcionesSeleccionadas = respuesta.RespuestasOpciones
                             .Select(ro => pregunta.Opciones.FirstOrDefault(o => o.Id == ro.OpcionId)?.Label)
-                            .Where(label => label != null)
+                            .Where(label => label != null)!
                             .ToList();
 
-                        valorRespuesta = string.Join(", ", opcionesSeleccionadas);
+                        valorRespuesta = string.Join(", ", opcionesSeleccionadas!);
                     }
                     else if (!string.IsNullOrEmpty(respuesta.Texto))
                     {
-                        valorRespuesta = respuesta.Texto;
+                        valorRespuesta = respuesta.Texto!;
                     }
                     else if (respuesta.Numerica.HasValue)
                     {
