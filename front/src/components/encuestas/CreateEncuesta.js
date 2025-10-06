@@ -43,13 +43,24 @@ const CreateEncuesta = () => {
         cierraEn: formData.cierraEn || cierraEn.toISOString().split('T')[0]
       };
 
-      await encuestasService.createEncuesta(encuestaData);
-      setSuccess('Encuesta creada exitosamente');
+      const result = await encuestasService.createEncuesta(encuestaData);
       
-      // Redirigir después de 2 segundos
-      setTimeout(() => {
-        navigate('/encuestas');
-      }, 2000);
+      if (result.success) {
+        setSuccess('Encuesta creada exitosamente. Redirigiendo...');
+        
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          if (result.id) {
+            // Si tenemos el ID, redirigir a gestionar preguntas
+            navigate(`/encuestas/${result.id}/preguntas`);
+          } else {
+            // Si no tenemos el ID, redirigir a la lista
+            navigate('/encuestas');
+          }
+        }, 2000);
+      } else {
+        setError('Error al crear la encuesta: ' + (result.message || 'Error desconocido'));
+      }
     } catch (error) {
       setError('Error al crear la encuesta: ' + error.message);
     } finally {

@@ -12,6 +12,7 @@ import {
   MenuItem,
   Grid
 } from '@mui/material';
+import { QuestionAnswer as PreguntasIcon } from '@mui/icons-material';
 import { encuestasService } from '../../services/api';
 
 const EditEncuesta = () => {
@@ -164,20 +165,32 @@ const EditEncuesta = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <Box display="flex" gap={2} justifyContent="flex-end">
+              <Box display="flex" gap={2} justifyContent="space-between">
+                <Box display="flex" gap={2}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/encuestas')}
+                    disabled={saving}
+                  >
+                    Volver a Lista
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={saving}
+                  >
+                    {saving ? <CircularProgress size={24} /> : 'Actualizar Encuesta'}
+                  </Button>
+                </Box>
+                
+                {/* NUEVO BOTÓN PARA GESTIONAR PREGUNTAS */}
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/encuestas')}
-                  disabled={saving}
+                  color="secondary"
+                  startIcon={<PreguntasIcon />}
+                  onClick={() => navigate(`/encuestas/${id}/preguntas`)}
                 >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={saving}
-                >
-                  {saving ? <CircularProgress size={24} /> : 'Actualizar Encuesta'}
+                  Gestionar Preguntas
                 </Button>
               </Box>
             </Grid>

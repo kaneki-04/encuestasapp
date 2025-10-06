@@ -20,6 +20,9 @@ import EstadisticasEncuesta from './components/encuestas/EstadisticasEncuesta';
 import ResponderEncuesta from './components/respuestas/ResponderEncuesta';
 import MisRespuestas from './components/respuestas/MisRespuestas';
 
+// Componentes Comunes
+import QuickActions from './components/common/QuickActions';
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -131,6 +134,9 @@ function AppContent() {
           element={<Navigate to={isAuthenticated ? "/encuestas" : "/login"} />} 
         />
       </Routes>
+      
+      {/* QuickActions - Accesos rápidos flotantes */}
+      <QuickActions />
     </Router>
   );
 }
