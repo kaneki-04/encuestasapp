@@ -10,14 +10,20 @@ import {
   IconButton,
   CircularProgress,
   Alert,
-  Container
+  Container,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   BarChart as ChartIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  MoreVert as MoreIcon,
+  QuestionAnswer as PreguntasIcon,
+  PlayArrow as ResponderIcon,
+  List as RespuestasIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { encuestasService } from '../../services/api';
@@ -27,6 +33,8 @@ const EncuestasList = () => {
   const [encuestas, setEncuestas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [encuestaSeleccionada, setEncuestaSeleccionada] = useState(null);
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -66,6 +74,41 @@ const EncuestasList = () => {
     }
   };
 
+  const handleMenuOpen = (event, encuesta) => {
+    setMenuAnchor(event.currentTarget);
+    setEncuestaSeleccionada(encuesta);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setEncuestaSeleccionada(null);
+  };
+
+  const handleGestionPreguntas = () => {
+    if (encuestaSeleccionada) {
+      navigate(`/encuestas/${encuestaSeleccionada.id}/preguntas`);
+      handleMenuClose();
+    }
+  };
+
+  const handleVerEstadisticas = () => {
+    if (encuestaSeleccionada) {
+      navigate(`/encuestas/${encuestaSeleccionada.id}/estadisticas`);
+      handleMenuClose();
+    }
+  };
+
+  const handleResponderEncuesta = () => {
+    if (encuestaSeleccionada) {
+      navigate(`/encuestas/${encuestaSeleccionada.id}/responder`);
+      handleMenuClose();
+    }
+  };
+
+  const handleMisRespuestas = () => {
+    navigate('/mis-respuestas');
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -94,11 +137,19 @@ const EncuestasList = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      {/* Header con todas las opciones */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4" component="h1">
-          Mis Encuestas
+          Sistema de Encuestas
         </Typography>
         <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            startIcon={<RespuestasIcon />}
+            onClick={handleMisRespuestas}
+          >
+            Mis Respuestas
+          </Button>
           <Button
             variant="outlined"
             color="secondary"
@@ -196,26 +247,54 @@ const EncuestasList = () => {
                 </CardContent>
 
                 <Box sx={{ p: 1, bgcolor: 'grey.50' }}>
-                  <Box display="flex" justifyContent="space-between">
-                    <IconButton 
-                      size="small" 
-                      color="primary"
-                      onClick={() => handleEdit(encuesta.id)}
-                    >
-                      <EditIcon />
-                    </IconButton>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <IconButton 
+                        size="small" 
+                        color="primary"
+                        onClick={() => navigate(`/encuestas/${encuesta.id}/responder`)}
+                        title="Responder Encuesta"
+                      >
+                        <ResponderIcon />
+                      </IconButton>
+                      
+                      <IconButton 
+                        size="small" 
+                        color="info"
+                        onClick={() => navigate(`/encuestas/${encuesta.id}/estadisticas`)}
+                        title="Ver Estadísticas"
+                      >
+                        <ChartIcon />
+                      </IconButton>
+                    </Box>
                     
-                    <IconButton size="small" color="info">
-                      <ChartIcon />
-                    </IconButton>
-                    
-                    <IconButton 
-                      size="small" 
-                      color="error"
-                      onClick={() => handleDelete(encuesta.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                    <Box>
+                      <IconButton 
+                        size="small" 
+                        color="primary"
+                        onClick={() => handleEdit(encuesta.id)}
+                        title="Editar Encuesta"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      
+                      <IconButton 
+                        size="small" 
+                        color="error"
+                        onClick={() => handleDelete(encuesta.id)}
+                        title="Eliminar Encuesta"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+
+                      <IconButton 
+                        size="small"
+                        onClick={(e) => handleMenuOpen(e, encuesta)}
+                        title="Más opciones"
+                      >
+                        <MoreIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
                 </Box>
               </Card>
@@ -223,6 +302,26 @@ const EncuestasList = () => {
           ))
         )}
       </Grid>
+
+      {/* Menú de opciones adicionales */}
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleGestionPreguntas}>
+          <PreguntasIcon sx={{ mr: 1 }} />
+          Gestionar Preguntas
+        </MenuItem>
+        <MenuItem onClick={handleVerEstadisticas}>
+          <ChartIcon sx={{ mr: 1 }} />
+          Ver Estadísticas
+        </MenuItem>
+        <MenuItem onClick={handleResponderEncuesta}>
+          <ResponderIcon sx={{ mr: 1 }} />
+          Responder Encuesta
+        </MenuItem>
+      </Menu>
     </Container>
   );
 };
