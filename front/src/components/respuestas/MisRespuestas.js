@@ -62,7 +62,7 @@ const MisRespuestas = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Mis Respuestas
+       Respuestas
       </Typography>
 
       {error && (
