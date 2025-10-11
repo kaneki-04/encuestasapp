@@ -4,6 +4,7 @@ using GestorEncuestas_MVC.DTOs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace GestorEncuestas_MVC.Services
 {
@@ -69,27 +70,27 @@ namespace GestorEncuestas_MVC.Services
                         statsSheet.Cell(row, 3).Value = pregunta.Obligatorio ? "Sí" : "No";
                         statsSheet.Cell(row, 4).Value = opcion.Label;
                         statsSheet.Cell(row, 5).Value = opcion.ConteoSelecciones;
-                        
+
                         if (encuesta.TotalRespuestas > 0)
                         {
                             double porcentaje = (opcion.ConteoSelecciones * 100.0) / encuesta.TotalRespuestas;
                             statsSheet.Cell(row, 6).Value = porcentaje;
                             statsSheet.Cell(row, 6).Style.NumberFormat.Format = "0.00%";
                         }
-                        
+
                         row++;
                     }
                 }
 
                 statsSheet.Columns().AdjustToContents();
 
-                // Hoja de respuestas detalladas
+                // Hoja de respuestas detalladas (solo texto o números)
                 if (encuesta.Preguntas.Any(p => p.Respuestas != null && p.Respuestas.Any()))
                 {
                     var detailsSheet = workbook.Worksheets.Add("Respuestas Detalladas");
                     detailsSheet.Cell(1, 1).Value = "Fecha Respuesta";
                     detailsSheet.Cell(1, 2).Value = "Usuario";
-                    
+
                     int col = 3;
                     foreach (var pregunta in encuesta.Preguntas)
                     {
@@ -114,14 +115,12 @@ namespace GestorEncuestas_MVC.Services
                         detailsSheet.Cell(row, 1).Value = grupo.Key.Date;
                         detailsSheet.Cell(row, 1).Style.DateFormat.Format = "yyyy-mm-dd";
                         detailsSheet.Cell(row, 2).Value = grupo.Key.Usuario;
-                        
+
                         col = 3;
                         foreach (var pregunta in encuesta.Preguntas)
                         {
                             var respuestasUsuario = grupo
-                                .Where(r => pregunta.Respuestas.Any(pr => 
-                                    pr.FechaRespuesta.Date == grupo.Key.Date && 
-                                    pr.Usuario == grupo.Key.Usuario))
+                                .Where(r => r.PreguntaId == pregunta.Id)
                                 .Select(r => r.ValorRespuesta)
                                 .ToList();
 
@@ -129,10 +128,10 @@ namespace GestorEncuestas_MVC.Services
                             {
                                 detailsSheet.Cell(row, col).Value = string.Join(", ", respuestasUsuario);
                             }
-                            
+
                             col++;
                         }
-                        
+
                         row++;
                     }
 
@@ -152,7 +151,7 @@ namespace GestorEncuestas_MVC.Services
             using (var workbook = new XLWorkbook())
             {
                 var summarySheet = workbook.Worksheets.Add("Resumen Encuestas");
-                
+
                 // Encabezados
                 summarySheet.Cell(1, 1).Value = "ID";
                 summarySheet.Cell(1, 2).Value = "Título";
@@ -161,11 +160,11 @@ namespace GestorEncuestas_MVC.Services
                 summarySheet.Cell(1, 5).Value = "Fecha Cierre";
                 summarySheet.Cell(1, 6).Value = "Autor";
                 summarySheet.Cell(1, 7).Value = "Total Respuestas";
-                
+
                 var headerRange = summarySheet.Range(1, 1, 1, 7);
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
-                
+
                 // Datos
                 int row = 2;
                 foreach (var encuesta in encuestas)
@@ -179,9 +178,9 @@ namespace GestorEncuestas_MVC.Services
                     summarySheet.Cell(row, 7).Value = encuesta.TotalRespuestas;
                     row++;
                 }
-                
+
                 summarySheet.Columns().AdjustToContents();
-                
+
                 using (var stream = new MemoryStream())
                 {
                     workbook.SaveAs(stream);

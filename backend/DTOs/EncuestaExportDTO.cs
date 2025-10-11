@@ -1,4 +1,3 @@
-// DTOs/EncuestaExportDTO.cs
 using System;
 using System.Collections.Generic;
 
@@ -37,8 +36,10 @@ namespace GestorEncuestas_MVC.DTOs
 
     public class RespuestaExportDTO
     {
+        public int PreguntaId { get; set; }              // << Agregado
         public DateTime FechaRespuesta { get; set; }
         public string Usuario { get; set; } = string.Empty;
         public string ValorRespuesta { get; set; } = string.Empty;
+        public List<int> RespuestaOpcionesIds { get; set; } = new List<int>(); // << Opcional para preguntas de opciones múltiples
     }
 }

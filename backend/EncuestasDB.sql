@@ -15,7 +15,7 @@ CREATE TABLE roles (
 -- Tabla de usuarios
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT,
-    username VARCHAR(20),
+    username VARCHAR(50),
     normalized_username VARCHAR(255),
     rol INT,
     passwd VARCHAR(255),
@@ -81,8 +81,8 @@ CREATE TABLE role_claims (
 CREATE TABLE encuestas (
     id INT AUTO_INCREMENT,
     autor INT,
-    titulo VARCHAR(50),
-    descripcion VARCHAR(200),
+    titulo VARCHAR(100),
+    descripcion TEXT,
     estado VARCHAR(20),
     cierra_en DATETIME,
     creado_en DATETIME,
@@ -93,7 +93,7 @@ CREATE TABLE encuestas (
 CREATE TABLE preguntas (
     id INT AUTO_INCREMENT,
     encuesta_id INT,
-    enunciado VARCHAR(50),
+    enunciado TEXT,
     tipo_pregunta VARCHAR(50),
     obligatorio BOOL,
     CONSTRAINT preguntas_PK PRIMARY KEY(id),
@@ -115,7 +115,7 @@ CREATE TABLE respuestas(
     usuario_respuesta INT,
     encuesta_id INT,
     pregunta_id INT,
-    respuesta VARCHAR(100),
+    respuesta TEXT,
     respuesta_numeros FLOAT,
     fecha_respuesta DATETIME,
     seleccion_opcion_id INT,
@@ -139,8 +139,10 @@ INSERT INTO roles (id, rol, name, normalized_name, concurrency_stamp) VALUES
 (1, 'Admin', 'Admin', 'ADMIN', UUID()),
 (2, 'User', 'User', 'USER', UUID());
 
--- NO INSERTAR USUARIOS - SE CREARÁN MEDIANTE LA APLICACIÓN
+
+use usuarios;
+select * from usuarios;
+
 
 use encuestas;
 select * from encuestas;
-
