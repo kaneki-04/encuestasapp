@@ -16,7 +16,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip
+  Chip,
+  Tooltip as MuiTooltip,
+  Divider
 } from '@mui/material';
 import {
   BarChart,
@@ -25,7 +27,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   PieChart,
   Pie,
   Cell,
@@ -33,12 +34,14 @@ import {
 } from 'recharts';
 import { respuestasService, encuestasService } from '../../services/api';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+// Colores modernos para las gráficas
+const COLORS = ['#42a5f5', '#66bb6a', '#ffa726', '#ef5350', '#ab47bc'];
 
 const EstadisticasEncuesta = () => {
   const { id } = useParams();
   const [estadisticas, setEstadisticas] = useState(null);
   const [encuesta, setEncuesta] = useState(null);
+  const [graficos, setGraficos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -53,31 +56,55 @@ const EstadisticasEncuesta = () => {
         encuestasService.getEncuesta(id),
         respuestasService.getRespuestasByEncuesta(id)
       ]);
-      
+
       setEncuesta(encuestaData);
       setEstadisticas(respuestasData);
-    } catch (error) {
-      setError('Error al cargar las estadísticas');
+
+      // 🧠 Generar estadísticas por pregunta
+      const graficosData = {};
+      respuestasData.respuestas?.forEach((usuario) => {
+        usuario.respuestas.forEach((r) => {
+          const preguntaEnunciado = r.pregunta; 
+          const respuestaValor = r.respuesta;
+
+          if (!graficosData[preguntaEnunciado]) graficosData[preguntaEnunciado] = {};
+          
+          graficosData[preguntaEnunciado][respuestaValor] =
+            (graficosData[preguntaEnunciado][respuestaValor] || 0) + 1;
+        });
+      });
+
+      // Convertir a formato de Recharts (usando graficosMap)
+      const graficosMap = Object.keys(graficosData).map((pregunta) => ({
+        pregunta,
+        data: Object.entries(graficosData[pregunta]).map(([respuesta, count]) => ({
+          name: respuesta,
+          value: count,
+        })),
+      }));
+
+      // ⚙️ LÓGICA DE ORDENACIÓN (Para mantener el orden de la encuesta en los gráficos)
+      const graficosPorEnunciado = graficosMap.reduce((acc, curr) => {
+          acc[curr.pregunta] = curr;
+          return acc;
+      }, {});
+      
+      const preguntasOrdenadas = encuestaData.preguntas || [];
+      
+      const graficosFinalesOrdenados = preguntasOrdenadas
+          .map(p => {
+              return graficosPorEnunciado[p.enunciado]; 
+          })
+          .filter(grafico => grafico); 
+          
+      setGraficos(graficosFinalesOrdenados.length > 0 ? graficosFinalesOrdenados : graficosMap); 
+
+    } catch (e) {
+      console.error(e);
+      setError('Error al cargar las estadísticas. Revise la consola para detalles. Asegúrese de que su API de encuestas devuelva la lista de preguntas.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const generarDatosGrafico = (pregunta) => {
-    if (!estadisticas?.respuestas) return [];
-
-    const conteo = {};
-    estadisticas.respuestas.forEach(respuestaUsuario => {
-      const respuestaPregunta = respuestaUsuario.respuestas.find(
-        r => r.pregunta === pregunta.enunciado
-      );
-      if (respuestaPregunta) {
-        const valor = respuestaPregunta.respuesta;
-        conteo[valor] = (conteo[valor] || 0) + 1;
-      }
-    });
-
-    return Object.entries(conteo).map(([name, value]) => ({ name, value }));
   };
 
   if (loading) {
@@ -91,144 +118,148 @@ const EstadisticasEncuesta = () => {
   if (error) {
     return (
       <Container>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>{error}</Alert>
       </Container>
     );
   }
 
-  if (!estadisticas) {
+  if (!estadisticas || !estadisticas.respuestas?.length) {
     return (
       <Container>
-        <Alert severity="info">No hay datos estadísticos disponibles</Alert>
+        <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
+          No hay respuestas registradas para esta encuesta.
+        </Alert>
       </Container>
     );
   }
-
-  const preguntasEjemplo = [
-    {
-      id: 1,
-      enunciado: '¿Cómo calificarías nuestro servicio?',
-      tipoPregunta: 'Escala'
-    },
-    {
-      id: 2,
-      enunciado: '¿Recomendarías nuestros servicios?',
-      tipoPregunta: 'SeleccionUnica'
-    }
-  ];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Estadísticas de Encuesta
+      {/* 1. ENCABEZADO DE LA ENCUESTA */}
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+          {encuesta?.titulo || 'Estadísticas de Encuesta'}
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          {encuesta?.descripcion || 'Análisis de las respuestas recolectadas.'}
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <Chip label={`${estadisticas.respuestas?.length} respuestas`} color="primary" variant="filled" />
+          <Chip label={`Estado: ${encuesta?.estado}`} variant="outlined" />
+        </Box>
+      </Paper>
+
+      {/* 2. RESPUESTAS DETALLADAS (MOVIDA ARRIBA) */}
+      <Typography variant="h5" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 'bold' }}>
+        Respuestas Detalladas:
       </Typography>
 
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Typography variant="h5" gutterBottom>
-            {encuesta?.titulo || 'Encuesta'}
-          </Typography>
-          <Typography variant="body1" color="textSecondary" paragraph>
-            {encuesta?.descripcion || 'Descripción no disponible'}
-          </Typography>
-          <Box display="flex" gap={2} flexWrap="wrap">
-            <Chip 
-              label={`${estadisticas.respuestas?.length || 0} Respuestas`} 
-              color="primary" 
-            />
-            <Chip 
-              label={`Estado: ${encuesta?.estado || 'Desconocido'}`} 
-              variant="outlined" 
-            />
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Resumen de respuestas */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Distribución de Respuestas
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[{name: 'Respuestas', value: estadisticas.respuestas?.length || 0}]}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Ejemplo de Gráfico de Pregunta
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={[{name: 'Sí', value: 65}, {name: 'No', value: 35}]}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label
-                >
-                  <Cell fill={COLORS[0]} />
-                  <Cell fill={COLORS[1]} />
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      {/* Tabla de respuestas detalladas */}
-      <Paper sx={{ mt: 4, p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Respuestas Detalladas
-        </Typography>
+      <Paper sx={{ mt: 1, p: 2, borderRadius: 3, boxShadow: 6, mb: 5 }}>
         <TableContainer>
-          <Table>
+          <Table size="small">
             <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Fecha</TableCell>
-                <TableCell>Pregunta</TableCell>
-                <TableCell>Respuesta</TableCell>
+              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                <TableCell sx={{ fontWeight: 'bold' }}>Usuario</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Fecha</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Pregunta</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Respuesta</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {estadisticas.respuestas?.map((respuestaUsuario, index) => (
-                <React.Fragment key={index}>
-                  {respuestaUsuario.respuestas.map((respuesta, respIndex) => (
-                    <TableRow key={`${index}-${respIndex}`}>
-                      {respIndex === 0 && (
-                        <>
-                          <TableCell rowSpan={respuestaUsuario.respuestas.length}>
-                            {respuestaUsuario.usuario}
-                          </TableCell>
-                          <TableCell rowSpan={respuestaUsuario.respuestas.length}>
-                            {new Date(respuestaUsuario.fecha).toLocaleDateString()}
-                          </TableCell>
-                        </>
-                      )}
-                      <TableCell>{respuesta.pregunta}</TableCell>
-                      <TableCell>{respuesta.respuesta}</TableCell>
-                    </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
+              {estadisticas.respuestas.map((respuestaUsuario, index) =>
+                respuestaUsuario.respuestas.map((respuesta, i) => (
+                  <TableRow key={`${index}-${i}`} hover>
+                    {i === 0 && (
+                      <>
+                        <TableCell rowSpan={respuestaUsuario.respuestas.length}>
+                          {respuestaUsuario.usuario || `Usuario ${index + 1}`}
+                        </TableCell>
+                        <TableCell rowSpan={respuestaUsuario.respuestas.length}>
+                          {new Date(respuestaUsuario.fecha).toLocaleDateString()}
+                        </TableCell>
+                      </>
+                    )}
+                    <TableCell>{respuesta.pregunta}</TableCell>
+                    <TableCell>
+                        <MuiTooltip title={respuesta.respuesta} placement="top">
+                            <Box component="span" sx={{ 
+                                display: 'inline-block', 
+                                maxWidth: '250px', 
+                                overflow: 'hidden', 
+                                textOverflow: 'ellipsis', 
+                                whiteSpace: 'nowrap' 
+                            }}>
+                                {respuesta.respuesta}
+                            </Box>
+                        </MuiTooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* 3. GRÁFICAS POR PREGUNTA (MOVIDA ABAJO) */}
+      <Typography variant="h5" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 'bold' }}>
+        Gráficos:
+      </Typography>
+
+      <Grid container spacing={4}>
+        {graficos.map((grafico, index) => {
+            const isSingleResponse = grafico.data.length === 1;
+
+            return (
+              <Grid item xs={12} md={6} key={index}>
+                <Card sx={{ borderRadius: 3, boxShadow: 6 }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                      {grafico.pregunta}
+                    </Typography>
+                    <ResponsiveContainer width="100%" height={300}>
+                      {/* Usar Gráfico de Barras para > 2 opciones o si es una sola respuesta */}
+                      {grafico.data.length > 2 || isSingleResponse ? (
+                        <BarChart data={grafico.data} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="name" 
+                            interval={0} 
+                            angle={grafico.data.length > 3 ? -30 : 0} 
+                            textAnchor={grafico.data.length > 3 ? "end" : "middle"} 
+                            height={grafico.data.length > 3 ? 60 : 30} 
+                          />
+                          <YAxis allowDecimals={false} label={{ value: 'Frecuencia', angle: -90, position: 'insideLeft' }} />
+                          <Tooltip />
+                          <Bar dataKey="value" fill={COLORS[0]} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      ) : (
+                        // Usar Gráfico de Torta solo para 2 opciones
+                        <PieChart>
+                          <Pie
+                            data={grafico.data}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={110}
+                            fill="#8884d8"
+                            dataKey="value"
+                            label={!isSingleResponse ? ({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)` : false}
+                          >
+                            {grafico.data.map((_, i) => (
+                              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => [`${value} respuestas`, 'Total']} />
+                        </PieChart>
+                      )}
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+        })}
+      </Grid>
     </Container>
   );
 };

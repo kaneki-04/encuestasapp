@@ -143,3 +143,4 @@ INSERT INTO roles (id, rol, name, normalized_name, concurrency_stamp) VALUES
 
 use encuestas;
 select * from encuestas;
+

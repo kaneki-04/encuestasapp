@@ -82,6 +82,40 @@ namespace GestorEncuestas_MVC.Controllers.Api
             return Ok(encuesta);
         }
 
+        // AGREGAR AL EncuestasController.cs (en Controllers/Api/)
+        [AllowAnonymous]
+        [HttpGet("public/{id}")]
+        public async Task<IActionResult> GetEncuestaPublica(int id)
+        {
+            try
+            {
+                var encuesta = await _context.Encuestas
+                    .Where(e => e.Id == id && e.Estado == "Activa")
+                    .Select(e => new EncuestaDto
+                    {
+                        Id = e.Id,
+                        Titulo = e.Titulo,
+                        Descripcion = e.Descripcion,
+                        Estado = e.Estado,
+                        CierraEn = e.CierraEn,
+                        CreadoEn = e.CreadoEn,
+                        TotalRespuestas = e.Respuestas.Count
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (encuesta == null)
+                {
+                    return NotFound("Encuesta no encontrada o no está activa");
+                }
+
+                return Ok(encuesta);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al cargar la encuesta: {ex.Message}");
+            }
+        }
+
         // POST: api/encuestas
         [HttpPost]
         public async Task<IActionResult> CreateEncuesta([FromBody] CreateEncuestaDto encuestaDto)

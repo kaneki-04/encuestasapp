@@ -10,7 +10,6 @@ import {
   RadioGroup,
   FormControlLabel,
   FormControl,
-  FormLabel,
   Checkbox,
   Alert,
   CircularProgress,
@@ -18,7 +17,7 @@ import {
   Slider,
   Chip
 } from '@mui/material';
-import { respuestasService, encuestasService } from '../../services/api';
+import { respuestasService, encuestasService, preguntasService } from '../../services/api';
 
 const ResponderEncuesta = () => {
   const { id } = useParams();
@@ -38,14 +37,26 @@ const ResponderEncuesta = () => {
   const loadEncuesta = async () => {
     try {
       setLoading(true);
+      setError('');
+      
       // Cargar encuesta
       const encuestaData = await encuestasService.getEncuesta(id);
       setEncuesta(encuestaData);
+
+      // 🔹 Cargar preguntas REALES desde el backend - CON MANEJO DE ERRORES
+      console.log('🔄 Cargando preguntas reales de la encuesta...');
+      const preguntasData = await preguntasService.getPreguntasByEncuesta(id);
       
-      // Cargar preguntas (usando el servicio de preguntas que crearemos)
-      const preguntasData = await getPreguntasEjemplo(id); // Temporal
+      console.log('✅ Preguntas cargadas:', preguntasData);
+      
+      if (!preguntasData || preguntasData.length === 0) {
+        setError('Esta encuesta no tiene preguntas configuradas.');
+        setPreguntas([]);
+        return;
+      }
+
       setPreguntas(preguntasData);
-      
+
       // Inicializar respuestas vacías
       const respuestasIniciales = {};
       preguntasData.forEach(pregunta => {
@@ -56,8 +67,11 @@ const ResponderEncuesta = () => {
         }
       });
       setRespuestas(respuestasIniciales);
+      
     } catch (error) {
-      setError('Error al cargar la encuesta');
+      console.error('❌ Error al cargar la encuesta:', error);
+      setError(`Error al cargar la encuesta: ${error.message}`);
+      setPreguntas([]);
     } finally {
       setLoading(false);
     }
@@ -74,13 +88,13 @@ const ResponderEncuesta = () => {
     setRespuestas(prev => {
       const currentValues = prev[preguntaId] || [];
       let newValues;
-      
+
       if (checked) {
         newValues = [...currentValues, opcionValue];
       } else {
         newValues = currentValues.filter(v => v !== opcionValue);
       }
-      
+
       return {
         ...prev,
         [preguntaId]: newValues
@@ -90,7 +104,7 @@ const ResponderEncuesta = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validar preguntas obligatorias
     const preguntasObligatorias = preguntas.filter(p => p.obligatorio);
     const errores = preguntasObligatorias.filter(p => {
@@ -106,23 +120,24 @@ const ResponderEncuesta = () => {
     try {
       setSubmitting(true);
       setError('');
-      
+
       const respuestasFormateadas = preguntas.map(pregunta => ({
         preguntaId: pregunta.id,
-        respuestaTexto: Array.isArray(respuestas[pregunta.id]) 
+        respuestaTexto: Array.isArray(respuestas[pregunta.id])
           ? respuestas[pregunta.id].join(', ')
           : respuestas[pregunta.id],
         respuestaOpcionId: !Array.isArray(respuestas[pregunta.id]) && respuestas[pregunta.id] ? respuestas[pregunta.id] : ''
       }));
 
       await respuestasService.responderEncuesta(id, respuestasFormateadas);
-      
+
       setSuccess('¡Encuesta respondida exitosamente!');
       setTimeout(() => {
         navigate('/encuestas');
       }, 2000);
     } catch (error) {
-      setError('Error al enviar las respuestas: ' + error.message);
+      console.error('❌ Error al enviar respuestas:', error);
+      setError(`Error al enviar las respuestas: ${error.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -172,8 +187,8 @@ const ResponderEncuesta = () => {
                   <Checkbox
                     checked={(respuestas[pregunta.id] || []).includes(opcion.value)}
                     onChange={(e) => handleOpcionMultipleChange(
-                      pregunta.id, 
-                      opcion.value, 
+                      pregunta.id,
+                      opcion.value,
                       e.target.checked
                     )}
                   />
@@ -218,6 +233,7 @@ const ResponderEncuesta = () => {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
+        <Typography sx={{ ml: 2 }}>Cargando encuesta...</Typography>
       </Box>
     );
   }
@@ -225,7 +241,32 @@ const ResponderEncuesta = () => {
   if (!encuesta) {
     return (
       <Container>
-        <Alert severity="error">Encuesta no encontrada</Alert>
+        <Alert severity="error">
+          Encuesta no encontrada o no está disponible
+        </Alert>
+        <Button 
+          variant="contained" 
+          sx={{ mt: 2 }}
+          onClick={() => navigate('/encuestas')}
+        >
+          Volver a Encuestas
+        </Button>
+      </Container>
+    );
+  }
+
+  if (preguntas.length === 0 && error) {
+    return (
+      <Container>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/encuestas')}
+        >
+          Volver a Encuestas
+        </Button>
       </Container>
     );
   }
@@ -236,12 +277,28 @@ const ResponderEncuesta = () => {
         <Typography variant="h4" component="h1" gutterBottom>
           {encuesta.titulo}
         </Typography>
-        
+
         {encuesta.descripcion && (
           <Typography variant="body1" color="textSecondary" paragraph>
             {encuesta.descripcion}
           </Typography>
         )}
+
+        <Box sx={{ mb: 2 }}>
+          <Chip 
+            label={encuesta.estado || 'Activa'} 
+            color={encuesta.estado === 'Activa' ? 'success' : 'default'}
+            size="small"
+          />
+          {encuesta.cierraEn && (
+            <Chip 
+              label={`Cierra: ${new Date(encuesta.cierraEn).toLocaleDateString()}`}
+              variant="outlined"
+              size="small"
+              sx={{ ml: 1 }}
+            />
+          )}
+        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
@@ -262,19 +319,19 @@ const ResponderEncuesta = () => {
                 <Typography variant="h6" gutterBottom>
                   {index + 1}. {pregunta.enunciado}
                   {pregunta.obligatorio && (
-                    <Chip 
-                      label="Obligatorio" 
-                      color="error" 
-                      size="small" 
-                      sx={{ ml: 1 }} 
+                    <Chip
+                      label="Obligatorio"
+                      color="error"
+                      size="small"
+                      sx={{ ml: 1 }}
                     />
                   )}
                 </Typography>
-                
-                <Typography 
-                  variant="caption" 
-                  color="textSecondary" 
-                  display="block" 
+
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  display="block"
                   sx={{ mb: 2 }}
                 >
                   Tipo: {pregunta.tipoPregunta}
@@ -296,7 +353,7 @@ const ResponderEncuesta = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={submitting}
+              disabled={submitting || preguntas.length === 0}
               size="large"
             >
               {submitting ? <CircularProgress size={24} /> : 'Enviar Respuestas'}
@@ -306,57 +363,6 @@ const ResponderEncuesta = () => {
       </Paper>
     </Container>
   );
-};
-
-// Función temporal para obtener preguntas de ejemplo
-const getPreguntasEjemplo = (encuestaId) => {
-  return [
-    {
-      id: 1,
-      enunciado: '¿Cómo calificarías nuestro servicio?',
-      tipoPregunta: 'Escala',
-      obligatorio: true,
-      opciones: [
-        { id: 1, label: '1 - Muy Malo', value: '1' },
-        { id: 2, label: '2 - Malo', value: '2' },
-        { id: 3, label: '3 - Regular', value: '3' },
-        { id: 4, label: '4 - Bueno', value: '4' },
-        { id: 5, label: '5 - Excelente', value: '5' }
-      ]
-    },
-    {
-      id: 2,
-      enunciado: '¿Qué características te gustaría ver mejoradas?',
-      tipoPregunta: 'Texto',
-      obligatorio: false,
-      opciones: []
-    },
-    {
-      id: 3,
-      enunciado: '¿Qué productos de nuestra empresa conoces?',
-      tipoPregunta: 'OpcionMultiple',
-      obligatorio: true,
-      opciones: [
-        { id: 6, label: 'Producto A', value: 'producto_a' },
-        { id: 7, label: 'Producto B', value: 'producto_b' },
-        { id: 8, label: 'Producto C', value: 'producto_c' },
-        { id: 9, label: 'Ninguno', value: 'ninguno' }
-      ]
-    },
-    {
-      id: 4,
-      enunciado: '¿Recomendarías nuestros servicios a otras personas?',
-      tipoPregunta: 'SeleccionUnica',
-      obligatorio: true,
-      opciones: [
-        { id: 10, label: 'Sí, definitivamente', value: 'si' },
-        { id: 11, label: 'Probablemente', value: 'probablemente' },
-        { id: 12, label: 'No estoy seguro', value: 'no_seguro' },
-        { id: 13, label: 'Probablemente no', value: 'probablemente_no' },
-        { id: 14, label: 'Definitivamente no', value: 'no' }
-      ]
-    }
-  ];
 };
 
 export default ResponderEncuesta;

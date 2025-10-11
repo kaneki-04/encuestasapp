@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
+  Card,
+  CardContent,
   Typography,
   Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
   Chip,
+  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -18,13 +16,15 @@ import {
   FormControlLabel,
   Checkbox,
   MenuItem,
-  Alert,
   CircularProgress,
-  Divider
+  Alert,
+  Grid,
+  Divider,
+  // Importamos Tooltip para mejor UX en iconos
+  Tooltip 
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   RadioButtonChecked as OpcionUnicaIcon,
   CheckBox as OpcionMultipleIcon,
@@ -40,13 +40,10 @@ const PreguntasManager = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingPregunta, setEditingPregunta] = useState(null);
-
   const [formData, setFormData] = useState({
     enunciado: '',
     tipoPregunta: 'Texto',
-    obligatorio: false,
-    opciones: []
+    obligatorio: false
   });
 
   useEffect(() => {
@@ -57,6 +54,7 @@ const PreguntasManager = () => {
     try {
       setLoading(true);
       const data = await preguntasService.getPreguntasByEncuesta(id);
+      // Asume que las preguntas son un array y ordena por un campo si existe, o las deja como están
       setPreguntas(data);
     } catch (error) {
       setError('Error al cargar las preguntas');
@@ -66,13 +64,7 @@ const PreguntasManager = () => {
   };
 
   const handleCreate = () => {
-    setEditingPregunta(null);
-    setFormData({
-      enunciado: '',
-      tipoPregunta: 'Texto',
-      obligatorio: false,
-      opciones: []
-    });
+    setFormData({ enunciado: '', tipoPregunta: 'Texto', obligatorio: false });
     setOpenDialog(true);
   };
 
@@ -80,20 +72,22 @@ const PreguntasManager = () => {
     e.preventDefault();
     try {
       setError('');
+      // Agregar manejo de opciones para otros tipos de pregunta si es necesario
       await preguntasService.createPregunta(id, formData);
       setOpenDialog(false);
       await loadPreguntas();
     } catch (error) {
-      setError('Error al crear la pregunta: ' + error.message);
+      // Usar error?.message para mayor robustez
+      setError('Error al crear la pregunta: ' + (error.message || 'Error desconocido'));
     }
   };
 
   const handleDelete = async (preguntaId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
+    if (window.confirm('¿Seguro que deseas eliminar esta pregunta? Esta acción es irreversible.')) {
       try {
         await preguntasService.deletePregunta(preguntaId);
         await loadPreguntas();
-      } catch (error) {
+      } catch {
         setError('Error al eliminar la pregunta');
       }
     }
@@ -108,12 +102,22 @@ const PreguntasManager = () => {
       default: return <TextoIcon />;
     }
   };
+  
+  const getTipoLabel = (tipo) => {
+    switch (tipo) {
+        case 'SeleccionUnica': return 'Selección Única';
+        case 'OpcionMultiple': return 'Opción Múltiple';
+        case 'Texto': return 'Texto Libre';
+        case 'Escala': return 'Escala Numérica';
+        default: return 'Texto';
+    }
+  };
 
   const getTipoColor = (tipo) => {
     switch (tipo) {
       case 'SeleccionUnica': return 'primary';
       case 'OpcionMultiple': return 'secondary';
-      case 'Texto': return 'success';
+      case 'Texto': return 'info'; // Cambio de success a info para variar
       case 'Escala': return 'warning';
       default: return 'default';
     }
@@ -121,178 +125,193 @@ const PreguntasManager = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h2">
+    <Box sx={{ p: { xs: 2, md: 3, lg: 4 } }}>
+      
+      {/* Nuevo contenedor para centrar el título y alinear el botón */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+        <Typography 
+          variant="h4" 
+          fontWeight="bold" 
+          textAlign="center" 
+          color="text.primary"
+          sx={{ mb: 2 }}
+        >
           Preguntas de la Encuesta
         </Typography>
+
         <Button
           variant="contained"
           startIcon={<AddIcon />}
+          sx={{ 
+            bgcolor: '#6fcf97', 
+            '&:hover': { bgcolor: '#57b87f' },
+            boxShadow: 3,
+            fontWeight: 'bold'
+          }}
           onClick={handleCreate}
         >
           Agregar Pregunta
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+
+      {preguntas.length === 0 ? (
+        <Paper sx={{ p: 6, textAlign: 'center', borderRadius: 3, boxShadow: 3 }}>
+          <Typography variant="h5" color="text.secondary" gutterBottom>
+            Aún no hay preguntas.
+          </Typography>
+          <Typography variant="body1" color="text.secondary" mb={3}>
+            ¡Comienza a construir tu encuesta añadiendo la primera pregunta!
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            sx={{ bgcolor: '#6fcf97', '&:hover': { bgcolor: '#57b87f' }, fontWeight: 'bold' }}
+            onClick={handleCreate}
+          >
+            Agregar Primera Pregunta
+          </Button>
+        </Paper>
+      ) : (
+        <Grid container spacing={4}>
+          {preguntas.map((pregunta) => (
+            <Grid item xs={12} md={6} lg={4} key={pregunta.id}>
+              <Card
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  boxShadow: 4, // Sutilmente más de lo anterior
+                  transition: '0.3s',
+                  borderLeft: `5px solid ${getTipoColor(pregunta.tipoPregunta)}`, // Indicador de tipo
+                  '&:hover': { boxShadow: 8, transform: 'translateY(-2px)' }
+                }}
+              >
+                <CardContent sx={{ p: 1 }}>
+                  {/* Encabezado y Opciones */}
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                         <Tooltip title={getTipoLabel(pregunta.tipoPregunta)}>
+                            <Box color={`${getTipoColor(pregunta.tipoPregunta)}.main`}>
+                                {getTipoIcon(pregunta.tipoPregunta)}
+                            </Box>
+                         </Tooltip>
+                        <Typography 
+                            variant="subtitle1" 
+                            fontWeight="bold" 
+                            sx={{ wordBreak: 'break-word' }}
+                        >
+                            {pregunta.enunciado}
+                        </Typography>
+                      </Box>
+                      {pregunta.obligatorio && (
+                         <Tooltip title="Esta pregunta es obligatoria">
+                            <Chip label="Obligatoria" color="error" size="small" variant="outlined" />
+                         </Tooltip>
+                      )}
+                    </Box>
+
+                    <Box mt={1} display="flex" alignItems="center" flexWrap="wrap" gap={1}>
+                       <Chip
+                          label={getTipoLabel(pregunta.tipoPregunta)}
+                          color={getTipoColor(pregunta.tipoPregunta)}
+                          size="small"
+                          variant="filled"
+                        />
+                        {pregunta.opciones && pregunta.opciones.length > 0 && (
+                          <Chip 
+                            label={`Opciones: ${pregunta.opciones.length}`} 
+                            size="small" 
+                            variant="outlined"
+                          />
+                        )}
+                    </Box>
+
+                    {pregunta.opciones && pregunta.opciones.length > 0 && (
+                       <Typography variant="caption" display="block" mt={1} color="text.secondary" sx={{ 
+                           overflow: 'hidden', 
+                           textOverflow: 'ellipsis', 
+                           whiteSpace: 'nowrap' 
+                       }}>
+                           Ejemplos: {pregunta.opciones.map(o => o.label).join(', ')}
+                       </Typography>
+                    )}
+                  </Box>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  {/* Acciones */}
+                  <Box display="flex" justifyContent="flex-end">
+                    <Tooltip title="Eliminar Pregunta">
+                        <IconButton color="error" onClick={() => handleDelete(pregunta.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
       )}
 
-      <Paper elevation={2}>
-        {preguntas.length === 0 ? (
-          <Box textAlign="center" py={4}>
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              No hay preguntas en esta encuesta
-            </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-              Agrega la primera pregunta para comenzar
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreate}
-            >
-              Agregar Primera Pregunta
-            </Button>
-          </Box>
-        ) : (
-          <List>
-            {preguntas.map((pregunta, index) => (
-              <React.Fragment key={pregunta.id}>
-                <ListItem>
-                  <Box display="flex" alignItems="flex-start" width="100%">
-                    <Box mr={2} mt={0.5}>
-                      {getTipoIcon(pregunta.tipoPregunta)}
-                    </Box>
-                    <Box flex={1}>
-                      <ListItemText
-                        primary={
-                          <Box display="flex" alignItems="center" gap={1}>
-                            <Typography variant="subtitle1">
-                              {pregunta.enunciado}
-                            </Typography>
-                            {pregunta.obligatorio && (
-                              <Chip label="Obligatorio" color="error" size="small" />
-                            )}
-                          </Box>
-                        }
-                        secondary={
-                          <Box mt={1}>
-                            <Chip 
-                              icon={getTipoIcon(pregunta.tipoPregunta)}
-                              label={pregunta.tipoPregunta}
-                              color={getTipoColor(pregunta.tipoPregunta)}
-                              size="small"
-                              variant="outlined"
-                            />
-                            {pregunta.opciones && pregunta.opciones.length > 0 && (
-                              <Box mt={1}>
-                                <Typography variant="caption" color="textSecondary">
-                                  Opciones: {pregunta.opciones.map(o => o.label).join(', ')}
-                                </Typography>
-                              </Box>
-                            )}
-                          </Box>
-                        }
-                      />
-                    </Box>
-                    <ListItemSecondaryAction>
-                      <IconButton 
-                        edge="end" 
-                        color="error"
-                        onClick={() => handleDelete(pregunta.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
-                  </Box>
-                </ListItem>
-                {index < preguntas.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        )}
-      </Paper>
-
-      {/* Dialog para crear/editar pregunta */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingPregunta ? 'Editar Pregunta' : 'Agregar Nueva Pregunta'}
-        </DialogTitle>
+      {/* Diálogo de Creación */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Crear Nueva Pregunta</DialogTitle>
         <form onSubmit={handleSubmit}>
-          <DialogContent>
+          <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
             <TextField
-              autoFocus
-              margin="dense"
-              label="Enunciado de la pregunta"
+              label="Enunciado de la Pregunta"
               fullWidth
-              variant="outlined"
+              multiline
+              rows={2}
               required
               value={formData.enunciado}
               onChange={(e) => setFormData({ ...formData, enunciado: e.target.value })}
-              sx={{ mb: 2 }}
+              variant="outlined"
             />
-            
             <TextField
               select
-              margin="dense"
               label="Tipo de Pregunta"
               fullWidth
-              variant="outlined"
+              required
               value={formData.tipoPregunta}
               onChange={(e) => setFormData({ ...formData, tipoPregunta: e.target.value })}
-              sx={{ mb: 2 }}
+              variant="outlined"
             >
-              <MenuItem value="Texto">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <TextoIcon fontSize="small" />
-                  Texto Libre
-                </Box>
-              </MenuItem>
-              <MenuItem value="SeleccionUnica">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <OpcionUnicaIcon fontSize="small" />
-                  Selección Única
-                </Box>
-              </MenuItem>
-              <MenuItem value="OpcionMultiple">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <OpcionMultipleIcon fontSize="small" />
-                  Opción Múltiple
-                </Box>
-              </MenuItem>
-              <MenuItem value="Escala">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <EscalaIcon fontSize="small" />
-                  Escala Numérica
-                </Box>
-              </MenuItem>
+              <MenuItem value="Texto">Texto Libre</MenuItem>
+              <MenuItem value="SeleccionUnica">Selección Única</MenuItem>
+              <MenuItem value="OpcionMultiple">Opción Múltiple</MenuItem>
+              <MenuItem value="Escala">Escala Numérica</MenuItem>
             </TextField>
-
             <FormControlLabel
               control={
                 <Checkbox
                   checked={formData.obligatorio}
                   onChange={(e) => setFormData({ ...formData, obligatorio: e.target.checked })}
+                  color="error" // Usar un color que resalte la obligatoriedad
                 />
               }
-              label="Pregunta obligatoria"
+              label="Marcar como Pregunta Obligatoria"
             />
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained">
-              {editingPregunta ? 'Actualizar' : 'Crear'} Pregunta
+          <DialogActions sx={{ p: 3, borderTop: '1px solid #eee' }}>
+            <Button onClick={() => setOpenDialog(false)} color="inherit">Cancelar</Button>
+            <Button 
+                type="submit" 
+                variant="contained" 
+                startIcon={<AddIcon />}
+                sx={{ bgcolor: '#6fcf97', '&:hover': { bgcolor: '#57b87f' }, fontWeight: 'bold' }}
+            >
+              Crear Pregunta
             </Button>
           </DialogActions>
         </form>

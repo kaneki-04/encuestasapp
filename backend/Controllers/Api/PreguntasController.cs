@@ -65,6 +65,49 @@ namespace GestorEncuestas_MVC.Controllers.Api
             return Ok(preguntas);
         }
 
+        // AGREGAR ESTE MÉTODO AL PreguntasController.cs (en Controllers/Api/)
+        [AllowAnonymous] // O [Authorize] sin verificación de autor
+        [HttpGet("public/encuesta/{encuestaId}")]
+        public async Task<IActionResult> GetPreguntasPublicasByEncuesta(int encuestaId)
+        {
+            try
+            {
+                // Verificar que la encuesta existe y está activa
+                var encuesta = await _context.Encuestas
+                    .FirstOrDefaultAsync(e => e.Id == encuestaId && e.Estado == "Activa");
+
+                if (encuesta == null)
+                {
+                    return NotFound("Encuesta no encontrada o no está activa");
+                }
+
+                var preguntas = await _context.Preguntas
+                    .Where(p => p.EncuestaId == encuestaId)
+                    .Include(p => p.Opciones)
+                    .Select(p => new PreguntaDto
+                    {
+                        Id = p.Id,
+                        Enunciado = p.Enunciado,
+                        TipoPregunta = p.TipoPregunta,
+                        Obligatorio = p.Obligatorio,
+                        EncuestaId = p.EncuestaId,
+                        Opciones = p.Opciones.Select(o => new OpcionDto
+                        {
+                            Id = o.Id,
+                            Label = o.Label,
+                            Value = o.Value
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                return Ok(preguntas);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error al cargar las preguntas: {ex.Message}");
+            }
+        }
+
         // POST: api/preguntas
         [HttpPost]
         public async Task<IActionResult> CreatePregunta([FromBody] CreatePreguntaDto preguntaDto)

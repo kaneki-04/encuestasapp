@@ -89,7 +89,7 @@ export const authService = {
   }
 };
 
-// SERVICIO DE ENCUESTAS (mantener igual)
+// SERVICIO DE ENCUESTAS (ACTUALIZADO)
 export const encuestasService = {
   // Obtener todas las encuestas del usuario - API REST
   getEncuestas: async () => {
@@ -160,10 +160,38 @@ export const encuestasService = {
     }
   },
 
-  // Obtener encuesta por ID - API REST
+  // Obtener encuesta por ID - API PÚBLICA
   getEncuesta: async (id) => {
     try {
-      console.log('📖 Obteniendo encuesta ID:', id, 'via API REST');
+      console.log('📖 Obteniendo encuesta ID:', id, 'via API PÚBLICA');
+      
+      // 🔹 USAR ENDPOINT PÚBLICO para responder encuestas
+      const response = await fetch(`${API_BASE}/encuestas/public/${id}`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const encuesta = await response.json();
+        console.log('✅ Encuesta obtenida (pública):', encuesta);
+        return encuesta;
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error obteniendo encuesta pública:', errorData);
+        throw new Error(errorData || 'Error al cargar la encuesta');
+      }
+    } catch (error) {
+      console.error('❌ Error en getEncuesta:', error.message);
+      throw error; // No usar datos de ejemplo
+    }
+  },
+
+  // Obtener encuesta por ID - ENDPOINT PRIVADO (para edición)
+  getEncuestaPrivada: async (id) => {
+    try {
+      console.log('📖 Obteniendo encuesta ID:', id, 'via API PRIVADA');
       
       const response = await fetch(`${API_BASE}/encuestas/${id}`, {
         credentials: 'include',
@@ -174,7 +202,7 @@ export const encuestasService = {
 
       if (response.ok) {
         const encuesta = await response.json();
-        console.log('✅ Encuesta obtenida:', encuesta);
+        console.log('✅ Encuesta obtenida (privada):', encuesta);
         return encuesta;
       } else if (response.status === 404) {
         console.log('⚠️ Encuesta no encontrada en API, usando datos de ejemplo');
@@ -184,7 +212,7 @@ export const encuestasService = {
         return getEncuestaEjemplo(id);
       }
     } catch (error) {
-      console.error('❌ Error en getEncuesta:', error.message);
+      console.error('❌ Error en getEncuestaPrivada:', error.message);
       return getEncuestaEjemplo(id);
     }
   },
@@ -257,12 +285,42 @@ export const encuestasService = {
   }
 };
 
-// SERVICIO DE PREGUNTAS - ACTUALIZADO CON APIs REALES
+// SERVICIO DE PREGUNTAS - CORREGIDO
 export const preguntasService = {
-  // Obtener preguntas de una encuesta - API REAL
+  // Obtener preguntas de una encuesta (para responder) - ENDPOINT PÚBLICO
   getPreguntasByEncuesta: async (encuestaId) => {
     try {
-      console.log('❓ Obteniendo preguntas para encuesta ID:', encuestaId);
+      console.log('❓ Obteniendo preguntas REALES para encuesta ID:', encuestaId);
+      
+      // 🔹 USAR EL NUEVO ENDPOINT PÚBLICO
+      const response = await fetch(`${API_BASE}/preguntas/public/encuesta/${encuestaId}`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      console.log('📡 Estado respuesta preguntas públicas:', response.status);
+
+      if (response.ok) {
+        const preguntas = await response.json();
+        console.log('✅ Preguntas REALES obtenidas:', preguntas.length, 'preguntas');
+        return preguntas;
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Error obteniendo preguntas reales:', errorData);
+        throw new Error(errorData || 'Error al cargar las preguntas de la encuesta');
+      }
+    } catch (error) {
+      console.error('❌ Error en getPreguntasByEncuesta:', error);
+      throw error; // Propagar el error en lugar de usar datos de ejemplo
+    }
+  },
+
+  // Obtener preguntas de una encuesta (para edición) - ENDPOINT PRIVADO
+  getPreguntasByEncuestaPrivado: async (encuestaId) => {
+    try {
+      console.log('❓ Obteniendo preguntas (privado) para encuesta ID:', encuestaId);
       
       const response = await fetch(`${API_BASE}/preguntas/encuesta/${encuestaId}`, {
         credentials: 'include',
@@ -271,7 +329,7 @@ export const preguntasService = {
         },
       });
 
-      console.log('📡 Estado respuesta preguntas:', response.status);
+      console.log('📡 Estado respuesta preguntas privadas:', response.status);
 
       if (response.ok) {
         const preguntas = await response.json();
@@ -283,7 +341,7 @@ export const preguntasService = {
         return getPreguntasEjemplo(encuestaId);
       }
     } catch (error) {
-      console.error('❌ Error en getPreguntasByEncuesta:', error);
+      console.error('❌ Error en getPreguntasByEncuestaPrivado:', error);
       return getPreguntasEjemplo(encuestaId);
     }
   },

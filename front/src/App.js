@@ -1,6 +1,5 @@
-// src/App.js - Versión completa con todas las rutas
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box, CircularProgress } from '@mui/material';
@@ -8,6 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Componentes de Autenticación
 import Login from './components/auth/Login';
+import Register from './components/auth/Register';
 
 // Componentes de Encuestas
 import EncuestasList from './components/encuestas/EncuestasList';
@@ -25,12 +25,8 @@ import QuickActions from './components/common/QuickActions';
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
+    primary: { main: '#1976d2' },
+    secondary: { main: '#dc004e' },
   },
 });
 
@@ -50,6 +46,7 @@ const ProtectedRoute = ({ children }) => {
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -59,85 +56,63 @@ function AppContent() {
     );
   }
 
+  const isLoginPage = location.pathname === '/login' || location.pathname === '/register';
+
   return (
-    <Router>
+    <>
       <Routes>
         {/* Autenticación */}
         <Route 
           path="/login" 
           element={!isAuthenticated ? <Login /> : <Navigate to="/encuestas" />} 
         />
-        
+        <Route
+          path="/register"
+          element={!isAuthenticated ? <Register /> : <Navigate to="/encuestas" />}
+        />
+
         {/* Encuestas */}
         <Route 
           path="/encuestas" 
-          element={
-            <ProtectedRoute>
-              <EncuestasList />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><EncuestasList /></ProtectedRoute>} 
         />
         <Route 
           path="/encuestas/create" 
-          element={
-            <ProtectedRoute>
-              <CreateEncuesta />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><CreateEncuesta /></ProtectedRoute>} 
         />
         <Route 
           path="/encuestas/edit/:id" 
-          element={
-            <ProtectedRoute>
-              <EditEncuesta />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><EditEncuesta /></ProtectedRoute>} 
         />
         <Route 
           path="/encuestas/:id/preguntas" 
-          element={
-            <ProtectedRoute>
-              <PreguntasManager />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><PreguntasManager /></ProtectedRoute>} 
         />
         <Route 
           path="/encuestas/:id/estadisticas" 
-          element={
-            <ProtectedRoute>
-              <EstadisticasEncuesta />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><EstadisticasEncuesta /></ProtectedRoute>} 
         />
-        
+
         {/* Respuestas */}
         <Route 
           path="/encuestas/:id/responder" 
-          element={
-            <ProtectedRoute>
-              <ResponderEncuesta />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><ResponderEncuesta /></ProtectedRoute>} 
         />
         <Route 
           path="/mis-respuestas" 
-          element={
-            <ProtectedRoute>
-              <MisRespuestas />
-            </ProtectedRoute>
-          } 
+          element={<ProtectedRoute><MisRespuestas /></ProtectedRoute>} 
         />
-        
+
         {/* Ruta por defecto */}
         <Route 
           path="/" 
           element={<Navigate to={isAuthenticated ? "/encuestas" : "/login"} />} 
         />
       </Routes>
-      
-      {/* QuickActions - Accesos rápidos flotantes */}
-      <QuickActions />
-    </Router>
+
+      {/* QuickActions solo si no estamos en login o registro */}
+      {!isLoginPage && <QuickActions />}
+    </>
   );
 }
 
@@ -146,7 +121,9 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <AppContent />
+        <Router>
+          <AppContent />
+        </Router>
       </AuthProvider>
     </ThemeProvider>
   );
