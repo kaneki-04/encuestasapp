@@ -1,4 +1,3 @@
-// src/components/encuestas/EncuestasList.js
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -25,11 +24,13 @@ import {
   MoreVert as MoreIcon,
   QuestionAnswer as PreguntasIcon,
   PlayArrow as ResponderIcon,
-  List as RespuestasIcon
+  List as RespuestasIcon,
+  FileDownload as FileDownloadIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { encuestasService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import ExportEncuestaModal from './ExportEncuestaModal';
 
 const EncuestasList = () => {
   const [encuestas, setEncuestas] = useState([]);
@@ -37,6 +38,7 @@ const EncuestasList = () => {
   const [error, setError] = useState('');
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [encuestaSeleccionada, setEncuestaSeleccionada] = useState(null);
+  const [openExportModal, setOpenExportModal] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -104,10 +106,27 @@ const EncuestasList = () => {
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
           <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-            EncuestApp  x  Kevin!
+            EncuestApp x Kevin!
           </Typography>
           <Box display="flex" gap={2}>
-            {/* Botón Respuestas con color personalizado */}
+            {/* Botón para exportar */}
+            <Button
+              variant="outlined"
+              startIcon={<FileDownloadIcon />}
+              onClick={() => setOpenExportModal(true)}
+              sx={{
+                borderColor: '#6fcf97',
+                color: '#57b87f',
+                '&:hover': {
+                  backgroundColor: '#e6f9ee',
+                  borderColor: '#57b87f',
+                },
+              }}
+            >
+              Exportar a Excel
+            </Button>
+
+            {/* Botón Respuestas */}
             <Button
               variant="outlined"
               startIcon={<RespuestasIcon />}
@@ -121,18 +140,19 @@ const EncuestasList = () => {
                 },
               }}
             >
-              Respuestas:
+              Respuestas
             </Button>
 
             <Button variant="outlined" color="secondary" startIcon={<LogoutIcon />} onClick={handleLogout}>
               Cerrar Sesión
             </Button>
+
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleCreate}
               sx={{
-                backgroundColor: '#6fcf97', 
+                backgroundColor: '#6fcf97',
                 color: '#fff',
                 '&:hover': {
                   backgroundColor: '#57b87f'
@@ -168,7 +188,7 @@ const EncuestasList = () => {
                     '&:hover': { backgroundColor: '#57b87f' }
                   }}
                 >
-                  Crea tu primera encuesta:
+                  Crea tu primera encuesta
                 </Button>
               </Card>
             </Grid>
@@ -247,6 +267,9 @@ const EncuestasList = () => {
           <MenuItem onClick={handleResponderEncuesta}><ResponderIcon sx={{ mr: 1 }} /> Responder Encuesta</MenuItem>
         </Menu>
       </Paper>
+
+      {/* Modal de exportación */}
+      <ExportEncuestaModal open={openExportModal} onClose={() => setOpenExportModal(false)} />
     </Container>
   );
 };
