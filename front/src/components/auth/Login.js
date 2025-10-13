@@ -17,9 +17,11 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -190,6 +192,29 @@ const Login = () => {
                 ) : (
                   'Iniciar Sesión'
                 )}
+              </Button>
+
+              {/* Botón para registrarse */}
+              <Button
+                fullWidth
+                variant="outlined"
+                sx={{
+                  py: 1.2,
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  borderRadius: 3,
+                  mt: 1,
+                  textTransform: 'none',
+                  color: '#3cb371',
+                  borderColor: '#3cb371',
+                  '&:hover': {
+                    backgroundColor: '#e6f7ee',
+                    borderColor: '#009f5d',
+                  },
+                }}
+                onClick={() => navigate('/auth/register')}
+              >
+                ¿No tienes cuenta? Regístrate
               </Button>
             </Box>
           </Paper>

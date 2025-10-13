@@ -32,7 +32,7 @@ const theme = createTheme({
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
@@ -40,7 +40,7 @@ const ProtectedRoute = ({ children }) => {
       </Box>
     );
   }
-  
+
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
@@ -56,15 +56,15 @@ function AppContent() {
     );
   }
 
-  const isLoginPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
 
   return (
     <>
       <Routes>
         {/* Autenticación */}
-        <Route 
-          path="/login" 
-          element={!isAuthenticated ? <Login /> : <Navigate to="/encuestas" />} 
+        <Route
+          path="/login"
+          element={!isAuthenticated ? <Login /> : <Navigate to="/encuestas" />}
         />
         <Route
           path="/register"
@@ -72,46 +72,46 @@ function AppContent() {
         />
 
         {/* Encuestas */}
-        <Route 
-          path="/encuestas" 
-          element={<ProtectedRoute><EncuestasList /></ProtectedRoute>} 
+        <Route
+          path="/encuestas"
+          element={<ProtectedRoute><EncuestasList /></ProtectedRoute>}
         />
-        <Route 
-          path="/encuestas/create" 
-          element={<ProtectedRoute><CreateEncuesta /></ProtectedRoute>} 
+        <Route
+          path="/encuestas/create"
+          element={<ProtectedRoute><CreateEncuesta /></ProtectedRoute>}
         />
-        <Route 
-          path="/encuestas/edit/:id" 
-          element={<ProtectedRoute><EditEncuesta /></ProtectedRoute>} 
+        <Route
+          path="/encuestas/edit/:id"
+          element={<ProtectedRoute><EditEncuesta /></ProtectedRoute>}
         />
-        <Route 
-          path="/encuestas/:id/preguntas" 
-          element={<ProtectedRoute><PreguntasManager /></ProtectedRoute>} 
+        <Route
+          path="/encuestas/:id/preguntas"
+          element={<ProtectedRoute><PreguntasManager /></ProtectedRoute>}
         />
-        <Route 
-          path="/encuestas/:id/estadisticas" 
-          element={<ProtectedRoute><EstadisticasEncuesta /></ProtectedRoute>} 
+        <Route
+          path="/encuestas/:id/estadisticas"
+          element={<ProtectedRoute><EstadisticasEncuesta /></ProtectedRoute>}
         />
 
         {/* Respuestas */}
-        <Route 
-          path="/encuestas/:id/responder" 
-          element={<ProtectedRoute><ResponderEncuesta /></ProtectedRoute>} 
+        <Route
+          path="/encuestas/:id/responder"
+          element={<ProtectedRoute><ResponderEncuesta /></ProtectedRoute>}
         />
-        <Route 
-          path="/mis-respuestas" 
-          element={<ProtectedRoute><MisRespuestas /></ProtectedRoute>} 
+        <Route
+          path="/mis-respuestas"
+          element={<ProtectedRoute><MisRespuestas /></ProtectedRoute>}
         />
 
         {/* Ruta por defecto */}
-        <Route 
-          path="/" 
-          element={<Navigate to={isAuthenticated ? "/encuestas" : "/login"} />} 
+        <Route
+          path="/"
+          element={<Navigate to={isAuthenticated ? "/encuestas" : "/login"} />}
         />
       </Routes>
 
       {/* QuickActions solo si no estamos en login o registro */}
-      {!isLoginPage && <QuickActions />}
+      {!isAuthPage && <QuickActions />}
     </>
   );
 }
