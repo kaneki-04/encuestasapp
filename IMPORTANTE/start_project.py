@@ -2,8 +2,8 @@ import subprocess
 import time
 
 # --- RUTAS ABSOLUTAS ---
-BACKEND_PATH = r"C:\Kevin\Cosas\TAREAS\Tareas 2025 SEG\Web2\Git\REACT\encuestasapp\backend"
-FRONTEND_PATH = r"C:\Kevin\Cosas\TAREAS\Tareas 2025 SEG\Web2\Git\REACT\encuestasapp\front"
+BACKEND_PATH = r"C:\Kevin\Cosas\Tareas\Tareas 2025 SEG\Web2\Git\REACT\clone\encuestasapp\backend"
+FRONTEND_PATH = r"C:\Kevin\Cosas\Tareas\Tareas 2025 SEG\Web2\Git\REACT\clone\encuestasapp\front"
 
 # --- COMANDOS ---
 CMD_BACKEND = ["dotnet", "run"]

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {}
+    "C:\\Kevin\\Cosas\\Tareas\\Tareas 2025 SEG\\Web2\\Git\\REACT\\clone\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {}
   },
   "projects": {
-    "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {
+    "C:\\Kevin\\Cosas\\Tareas\\Tareas 2025 SEG\\Web2\\Git\\REACT\\clone\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
+        "projectUniqueName": "C:\\Kevin\\Cosas\\Tareas\\Tareas 2025 SEG\\Web2\\Git\\REACT\\clone\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
         "projectName": "GestorEncuestas_MVC",
-        "projectPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
+        "projectPath": "C:\\Kevin\\Cosas\\Tareas\\Tareas 2025 SEG\\Web2\\Git\\REACT\\clone\\encuestasapp\\backend\\GestorEncuestas_MVC.csproj",
         "packagesPath": "C:\\Users\\kvin1\\.nuget\\packages\\",
-        "outputPath": "C:\\Kevin\\Cosas\\TAREAS\\Tareas 2025 SEG\\Web2\\Git\\REACT\\encuestasapp\\backend\\obj\\",
+        "outputPath": "C:\\Kevin\\Cosas\\Tareas\\Tareas 2025 SEG\\Web2\\Git\\REACT\\clone\\encuestasapp\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -100,7 +100,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

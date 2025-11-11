@@ -1,5 +1,5 @@
 // src/services/api.js - SERVICIOS ACTUALIZADOS
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:5204/api';
 
 // SERVICIO DE AUTENTICACIÓN (mantener igual)
 export const authService = {
