@@ -5,7 +5,7 @@ import {
   Add as AddIcon,
   QuestionAnswer as PreguntasIcon,
   List as RespuestasIcon,
-  Home as HomeIcon // <-- Icono cambiado de StatsIcon a HomeIcon
+  Home as HomeIcon 
 } from '@mui/icons-material';
 
 const QuickActions = () => {
@@ -24,10 +24,10 @@ const QuickActions = () => {
       icon={<SpeedDialIcon />}
       FabProps={{
         sx: {
-          bgcolor: '#19d272ff',       // Color principal del botón +
-          color: '#000000ff',            // Color del icono "+"
+          bgcolor: '#21b669ff',       
+          color: '#000000ff',           
           '&:hover': {
-            bgcolor: '#119345ff',     // Color al pasar el mouse
+            bgcolor: '#0b8055ff',     
           },
         },
       }}

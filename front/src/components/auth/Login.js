@@ -1,4 +1,3 @@
-// src/components/auth/Login.js
 import React, { useState } from 'react';
 import {
   Box,
@@ -13,9 +12,13 @@ import {
   FormControlLabel,
   InputAdornment,
   Fade,
+  Avatar, // Agregado: Para el ícono principal
+  Link, // Agregado: Para el enlace de "Olvidó su contraseña"
+  Grid, // Agregado: Para manejar el layout de "Recordarme" y el enlace
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined'; // Icono para la contraseña
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,10 +40,13 @@ const Login = () => {
     setError('');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      await login(formData);
+      // Simulación de una llamada de API
+      await new Promise((resolve) => setTimeout(resolve, 1500)); 
+      
+      // Llamada a la función de login (manteniendo la lógica funcional)
+      await login(formData); 
     } catch (err) {
-      setError('Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.');
+      setError('Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.');
     } finally {
       setLoading(false);
     }
@@ -54,11 +60,16 @@ const Login = () => {
     }));
   };
 
+  // --- Mejoras de Diseño (Estilos) ---
+  const primaryGreen = '#2e7d32'; // Un verde más oscuro y corporativo (Green 800)
+  const lightGreen = '#a5d6a7';  // Un verde más claro (Green 200)
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #b2f7c1 0%, #68efad 40%, #3cb371 100%)',
+        // Fondo de gradiente suave y profesional
+        background: `linear-gradient(135deg, ${lightGreen} 0%, ${primaryGreen} 100%)`, 
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -68,36 +79,54 @@ const Login = () => {
       <Fade in timeout={700}>
         <Container component="main" maxWidth="xs">
           <Paper
-            elevation={10}
+            elevation={15} // Elevación más marcada
             sx={{
-              p: 5,
+              p: { xs: 3, sm: 5 }, // Relleno adaptable
               borderRadius: 4,
+              // Efecto "Glassmorphism" con más énfasis en la opacidad
               backdropFilter: 'blur(10px)',
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.35)', // Sombra más profunda
             }}
           >
+            {/* Contenedor del ícono principal */}
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                mb: 3 
+            }}>
+              <Avatar sx={{ 
+                  m: 1, 
+                  bgcolor: primaryGreen, // Color corporativo
+                  width: 56, 
+                  height: 56 
+              }}>
+                <LockOutlinedIcon fontSize="large" />
+              </Avatar>
+            </Box>
+
+            {/* Título Principal */}
             <Typography
-              variant="h4"
+              variant="h5" // Reducción de h4 a h5 para una mejor jerarquía
               align="center"
               sx={{
                 fontWeight: 700,
-                background: 'linear-gradient(90deg, #009f5d, #3cb371)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1,
+                color: primaryGreen, // Color sólido para mejor legibilidad
+                mb: 0.5,
               }}
             >
               Gestor de EncuestApps
             </Typography>
 
+            {/* Subtítulo */}
             <Typography
-              variant="subtitle1"
+              variant="subtitle2" // Subtítulo más discreto
               align="center"
               color="text.secondary"
               sx={{ mb: 3 }}
             >
-              Inicia sesión para continuar
+              Inicia sesión con tus credenciales
             </Typography>
 
             {error && (
@@ -107,6 +136,7 @@ const Login = () => {
             )}
 
             <Box component="form" onSubmit={handleSubmit}>
+              {/* Campo de Usuario */}
               <TextField
                 margin="normal"
                 required
@@ -118,15 +148,17 @@ const Login = () => {
                 autoFocus
                 value={formData.username}
                 onChange={handleChange}
+                variant="outlined" // Usar 'outlined' para un look más moderno
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <AccountCircle sx={{ color: '#3cb371' }} />
+                      <AccountCircle sx={{ color: primaryGreen }} />
                     </InputAdornment>
                   ),
                 }}
               />
 
+              {/* Campo de Contraseña */}
               <TextField
                 margin="normal"
                 required
@@ -138,51 +170,74 @@ const Login = () => {
                 autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
+                variant="outlined"
+                sx={{ mb: 1 }} // Reducir margen inferior para el Grid
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockOutlinedIcon sx={{ color: '#3cb371' }} />
+                      <VpnKeyOutlinedIcon sx={{ color: primaryGreen }} />
                     </InputAdornment>
                   ),
                 }}
               />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="rememberMe"
-                    sx={{
-                      color: '#68efad',
-                      '&.Mui-checked': { color: '#3cb371' },
-                    }}
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
+              
+              {/* Opciones de "Recordarme" y "Olvidé mi contraseña" en una cuadrícula */}
+              <Grid container justifyContent="space-between" alignItems="center">
+                <Grid item>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="rememberMe"
+                        sx={{
+                          color: lightGreen,
+                          '&.Mui-checked': { color: primaryGreen },
+                        }}
+                        checked={formData.rememberMe}
+                        onChange={handleChange}
+                      />
+                    }
+                    label="Recordarme"
+                    sx={{ mt: 1 }}
                   />
-                }
-                label="Recordarme"
-                sx={{ mt: 1 }}
-              />
+                </Grid>
+                <Grid item>
+                    <Link 
+                        href="#" 
+                        variant="body2" 
+                        color={primaryGreen}
+                        sx={{ 
+                            textDecoration: 'none', 
+                            fontWeight: 'bold', 
+                            '&:hover': { textDecoration: 'underline' } 
+                        }}
+                    >
+                        ¿Olvidaste la contraseña?
+                    </Link>
+                </Grid>
+              </Grid>
 
+
+              {/* Botón de Iniciar Sesión */}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 sx={{
                   mt: 4,
-                  mb: 2,
                   py: 1.4,
                   fontWeight: 'bold',
                   fontSize: '1rem',
                   borderRadius: 3,
                   textTransform: 'none',
-                  background: 'linear-gradient(90deg, #68efad 0%, #3cb371 100%)',
+                  // Gradiente más sutil y enfocado en los colores corporativos
+                  background: `linear-gradient(90deg, ${lightGreen} 0%, ${primaryGreen} 100%)`, 
                   color: '#fff',
-                  boxShadow: '0 6px 15px rgba(0,0,0,0.25)',
+                  boxShadow: '0 6px 15px rgba(46, 125, 50, 0.4)', // Sombra con color del tema
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    background: 'linear-gradient(90deg, #4be38f 0%, #009f5d 100%)',
+                    background: `linear-gradient(90deg, ${primaryGreen} 0%, #1b5e20 100%)`, // Oscurecer al pasar el mouse
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.35)',
+                    boxShadow: '0 8px 20px rgba(46, 125, 50, 0.6)', 
                   },
                 }}
                 disabled={loading}
@@ -197,24 +252,23 @@ const Login = () => {
               {/* Botón para registrarse */}
               <Button
                 fullWidth
-                variant="outlined"
+                variant="text" // Usar 'text' para hacerlo más un enlace y menos un botón de acción principal
                 sx={{
                   py: 1.2,
                   fontWeight: 'bold',
                   fontSize: '0.95rem',
                   borderRadius: 3,
-                  mt: 1,
+                  mt: 2,
                   textTransform: 'none',
-                  color: '#3cb371',
-                  borderColor: '#3cb371',
+                  color: primaryGreen, // Texto con color primario
                   '&:hover': {
-                    backgroundColor: '#e6f7ee',
-                    borderColor: '#009f5d',
+                    backgroundColor: 'transparent',
+                    textDecoration: 'underline', // Destacar al pasar el mouse
                   },
                 }}
                 onClick={() => navigate('/auth/register')}
               >
-                ¿No tienes cuenta? Regístrate
+                ¿No tienes cuenta? **Regístrate aquí**
               </Button>
             </Box>
           </Paper>

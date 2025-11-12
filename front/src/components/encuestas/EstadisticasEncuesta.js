@@ -60,7 +60,6 @@ const EstadisticasEncuesta = () => {
       setEncuesta(encuestaData);
       setEstadisticas(respuestasData);
 
-      // 🧠 Generar estadísticas por pregunta
       const graficosData = {};
       respuestasData.respuestas?.forEach((usuario) => {
         usuario.respuestas.forEach((r) => {
@@ -83,7 +82,7 @@ const EstadisticasEncuesta = () => {
         })),
       }));
 
-      // ⚙️ LÓGICA DE ORDENACIÓN (Para mantener el orden de la encuesta en los gráficos)
+
       const graficosPorEnunciado = graficosMap.reduce((acc, curr) => {
           acc[curr.pregunta] = curr;
           return acc;
@@ -145,7 +144,7 @@ const EstadisticasEncuesta = () => {
         </Typography>
         <Divider sx={{ my: 2 }} />
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-          <Chip label={`${estadisticas.respuestas?.length} respuestas`} color="primary" variant="filled" />
+          <Chip label={`${estadisticas.respuestas?.length} Respuestas`} color="primary" variant="filled" />
           <Chip label={`Estado: ${encuesta?.estado}`} variant="outlined" />
         </Box>
       </Paper>

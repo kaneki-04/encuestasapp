@@ -213,8 +213,8 @@ const CreateEncuesta = () => {
                       px: 3,
                       py: 1,
                       fontWeight: 'bold',
-                      backgroundColor: '#1976d2',
-                      '&:hover': { backgroundColor: '#125ea2' },
+                      backgroundColor: '#23b42fff',
+                      '&:hover': { backgroundColor: '#12a258ff' },
                     }}
                   >
                     {loading ? (
